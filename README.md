@@ -116,12 +116,46 @@ same sample data. Before using it with real people you need a backend. The piece
 3. **The assistant** — currently rule-based (fast, free, offline). It can be upgraded to a real
    AI by sending the customer's data + question to an LLM API. Tell me if you'd like that.
 
-## Publish it (free)
+## Blog
 
-Drag-and-drop the whole folder onto any of these:
+The blog is **data-driven** — you don't touch HTML to publish a post.
 
-- **Netlify** — <https://app.netlify.com/drop>
-- **Cloudflare Pages** — <https://pages.cloudflare.com>
-- **GitHub Pages** — push the folder to a repo and enable Pages
+| File | Purpose |
+|------|---------|
+| `blog.html` | The blog index (list of all posts) |
+| `post.html` | Renders a single article from `?slug=...` |
+| `js/blog-data.js` | **All the posts live here** — one object per post |
+| `js/blog.js` | Renders the index, the article, and the homepage teaser |
 
-All three give you a free HTTPS link you can connect to a custom domain (e.g. `serenetouchpest.ca`).
+**To add a post:** open `js/blog-data.js`, copy an existing entry, and change the fields
+(`slug`, `title`, `excerpt`, `date`, `category`, `readTime`, `content`). The blog index, the
+homepage "From the Blog" strip, and the article page all update automatically. Optionally add a
+cover image in `images/blog/` and point `cover` at it.
+
+## Pictures / images
+
+The visuals are **custom SVG illustrations** in your brand colours (`images/` and `images/blog/`):
+blog cover art and a "protected home" graphic in the Why-Us section. SVGs are crisp at any size,
+load instantly, and never break.
+
+**To use your own photos instead:** drop image files (JPg/PNG) into `images/` and change the
+relevant `<img src="...">` (in `index.html`) or the `cover:` field (in `js/blog-data.js`). Keep
+links **relative** (e.g. `images/my-photo.jpg`, never `/images/...`) so they work on GitHub Pages.
+
+## Hosting — already live ✅
+
+The site is deployed on **GitHub Pages**:
+
+- **Live site:** <https://snasser404.github.io/serene-touch-pest-control/>
+- **Repo:** <https://github.com/Snasser404/serene-touch-pest-control>
+
+**To publish changes**, commit and push — Pages rebuilds automatically in ~1–2 minutes:
+
+```powershell
+git add -A
+git commit -m "Update site"
+git push
+```
+
+You can connect a custom domain (e.g. `serenetouchpest.ca`) later in the repo's
+**Settings → Pages** section.
