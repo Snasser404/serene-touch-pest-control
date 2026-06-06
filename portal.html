@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal | Serene Touch Pest Control</title>
+  <meta name="description" content="Serene Touch Pest Control portal — customers, technicians, and admins sign in to manage pest control service." />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#0e3a6b" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white' stroke='%230e3a6b' stroke-width='2'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' font-weight='bold' fill='%2322c55e' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/portal.css" />
+</head>
+<body>
+
+  <!-- ===================== LOGIN VIEW ===================== -->
+  <section class="login" id="loginView">
+    <div class="login__card">
+      <a href="index.html" class="logo login__logo" aria-label="Serene Touch home">
+        <span class="logo__mark" aria-hidden="true">S</span>
+        <span class="logo__text">
+          <span class="logo__name">SERENE TOUCH</span>
+          <span class="logo__sub">PEST CONTROL SERVICES</span>
+        </span>
+      </a>
+
+      <h1 class="login__title">Portal Sign In</h1>
+      <p class="login__sub">For customers, technicians, and staff.</p>
+
+      <form id="loginForm" novalidate>
+        <p class="login__error" id="loginError" role="alert"></p>
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" autocomplete="username" placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" placeholder="••••••••" required />
+        </div>
+        <div class="login__row">
+          <span></span>
+          <a href="tel:+14389886709">Forgot password?</a>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block">Sign In</button>
+      </form>
+
+      <div class="login__demo">
+        <span class="login__demo-label">Explore a demo dashboard</span>
+        <div class="role-demos">
+          <button type="button" class="role-demo" data-role="customer">
+            <span class="role-demo__icon">🏠</span>
+            <strong>Customer</strong>
+            <small>Track my service</small>
+          </button>
+          <button type="button" class="role-demo" data-role="technician">
+            <span class="role-demo__icon">🧰</span>
+            <strong>Technician</strong>
+            <small>My job route</small>
+          </button>
+          <button type="button" class="role-demo" data-role="admin">
+            <span class="role-demo__icon">📊</span>
+            <strong>Admin</strong>
+            <small>Manage all</small>
+          </button>
+        </div>
+        <p class="login__demo-note">Password for all demo accounts: <b>demo123</b></p>
+      </div>
+
+      <a href="index.html" class="login__back">← Back to website</a>
+    </div>
+  </section>
+
+  <!-- ===================== APP SHELL (all roles) ===================== -->
+  <div id="appShell" class="hidden">
+    <header class="appbar">
+      <div class="container appbar__inner">
+        <a href="index.html" class="logo" aria-label="Serene Touch home">
+          <span class="logo__mark" aria-hidden="true">S</span>
+          <span class="logo__text">
+            <span class="logo__name">SERENE TOUCH</span>
+            <span class="logo__sub" id="appbarSub">PORTAL</span>
+          </span>
+        </a>
+        <div class="appbar__right">
+          <div class="appbar__user">
+            <span class="avatar" id="userAvatar" aria-hidden="true">ST</span>
+            <span class="appbar__name">
+              <strong id="userName">User</strong>
+              <span id="userRole">Role</span>
+            </span>
+          </div>
+          <button class="btn btn--ghost btn--sm" id="signOutBtn">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="portal-main">
+      <div class="container">
+
+        <!-- ---------- CUSTOMER VIEW ---------- -->
+        <div id="customerView" class="role-view hidden">
+          <div class="welcome">
+            <h1 id="welcomeTitle">Welcome</h1>
+            <p>Here's everything about your pest control service in one place.</p>
+            <span class="demo-flag" title="Sample data for demonstration">● Demo account — sample data</span>
+          </div>
+
+          <div class="status-banner">
+            <span class="status-banner__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z"/></svg>
+            </span>
+            <div class="status-banner__text">
+              <strong id="bannerStrong">Your next treatment</strong>
+              <span id="bannerSpan">—</span>
+            </div>
+            <div class="status-banner__cta">
+              <a class="btn btn--primary" href="#prepCard">Prepare now</a>
+            </div>
+          </div>
+
+          <div class="grid">
+            <section class="card" aria-labelledby="apptTitle">
+              <div class="card__head">
+                <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z"/></svg></span>
+                <h2 id="apptTitle">Next Appointment</h2>
+                <span class="card__badge" id="apptBadge">Scheduled</span>
+              </div>
+              <div id="apptBody"></div>
+            </section>
+
+            <section class="card" aria-labelledby="treatTitle">
+              <div class="card__head">
+                <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></span>
+                <h2 id="treatTitle">Your Treatment</h2>
+              </div>
+              <div id="treatBody"></div>
+            </section>
+
+            <section class="card" aria-labelledby="tlTitle">
+              <div class="card__head">
+                <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19 15.5a3.5 3.5 0 0 0-3.45 3H8a2 2 0 1 1 0-4h6a4 4 0 0 0 0-8H8.83a3.5 3.5 0 1 0 0 2H14a2 2 0 1 1 0 4H8a4 4 0 0 0 0 8h7.55A3.5 3.5 0 1 0 19 15.5z"/></svg></span>
+                <h2 id="tlTitle">What Happens Next</h2>
+              </div>
+              <div class="timeline" id="timeline"></div>
+            </section>
+
+            <section class="card" id="prepCard" aria-labelledby="prepTitle">
+              <div class="card__head">
+                <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19 3h-4.18A3 3 0 0 0 9.18 3H5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-2 14l-3-3 1.4-1.4L10 14.2l5.6-5.6L17 10l-7 7z"/></svg></span>
+                <h2 id="prepTitle">How to Prepare</h2>
+              </div>
+              <div class="prep__bar-wrap">
+                <div class="prep__bar"><div class="prep__bar-fill" id="prepFill"></div></div>
+                <span class="prep__count" id="prepCount">0/0</span>
+              </div>
+              <div class="prep__list" id="prepList"></div>
+              <div class="prep__done hidden" id="prepDone">✅ You're all set for your visit — nicely done!</div>
+            </section>
+
+            <section class="card card--wide" aria-labelledby="histTitle">
+              <div class="card__head">
+                <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7 6.96 6.96 0 0 1-4.9-2L6.7 18.4A9 9 0 1 0 13 3zm-1 5v5l4.25 2.52.75-1.23-3.5-2.08V8z"/></svg></span>
+                <h2 id="histTitle">Service History</h2>
+              </div>
+              <div class="history" id="historyList"></div>
+            </section>
+          </div>
+        </div>
+
+        <!-- ---------- TECHNICIAN VIEW ---------- -->
+        <div id="techView" class="role-view hidden">
+          <div class="welcome">
+            <h1 id="techWelcome">Your Schedule</h1>
+            <p id="techSub">Your assigned jobs and routes.</p>
+            <span class="demo-flag">● Demo account — sample data</span>
+          </div>
+          <div class="stat-grid" id="techStats"></div>
+          <h2 class="section-h">Your Jobs</h2>
+          <div id="techJobs"></div>
+        </div>
+
+        <!-- ---------- ADMIN VIEW ---------- -->
+        <div id="adminView" class="role-view hidden">
+          <div class="welcome">
+            <h1>Operations Dashboard</h1>
+            <p>Schedule, assign technicians, and keep an eye on every job.</p>
+            <span class="demo-flag">● Demo account — sample data</span>
+          </div>
+          <div class="stat-grid" id="adminStats"></div>
+
+          <section class="card card--wide">
+            <div class="card__head">
+              <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z"/></svg></span>
+              <h2>Appointments</h2>
+              <span class="card__hint">Assign a technician with the dropdown</span>
+            </div>
+            <div id="adminAppts"></div>
+          </section>
+
+          <section class="card card--wide">
+            <div class="card__head">
+              <span class="card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-5.33 0-8 2.67-8 6v2h16v-2c0-3.33-2.67-6-8-6z"/></svg></span>
+              <h2>Technicians</h2>
+            </div>
+            <div id="adminTechs"></div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ===================== ASSISTANT (customer only) ===================== -->
+  <button class="assistant-launcher hidden" id="assistantLauncher" aria-label="Open assistant">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM7 9h10v2H7zm0 4h7v2H7z"/></svg>
+    <span>Ask the assistant</span>
+  </button>
+
+  <div class="assistant" id="assistant" role="dialog" aria-label="Serene Touch assistant">
+    <div class="assistant__head">
+      <span class="avatar" aria-hidden="true">ST</span>
+      <div>
+        <h3>Serene Assistant</h3>
+        <span><span class="dot"></span> Online · knows your account</span>
+      </div>
+      <button class="assistant__close" id="assistantClose" aria-label="Close assistant">✕</button>
+    </div>
+    <div class="assistant__body" id="assistantBody"></div>
+    <div class="assistant__chips" id="assistantChips"></div>
+    <div class="assistant__foot">
+      <input type="text" id="assistantInput" placeholder="Ask about your service…" autocomplete="off" />
+      <button class="assistant__send" id="assistantSend" aria-label="Send">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/portal-data.js"></script>
+  <script src="js/portal.js"></script>
+</body>
+</html>
