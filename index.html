@@ -65,6 +65,7 @@
           <li><a href="#services" class="nav__link">Services</a></li>
           <li><a href="#why" class="nav__link">Why Us</a></li>
           <li><a href="#process" class="nav__link">How It Works</a></li>
+          <li><a href="blog.html" class="nav__link">Blog</a></li>
           <li><a href="#contact" class="nav__link">Contact</a></li>
         </ul>
       </nav>
@@ -242,9 +243,9 @@
     <!-- ===================== WHY CHOOSE US ===================== -->
     <section class="section why" id="why">
       <div class="container why__inner">
-        <div class="why__media" aria-hidden="true">
+        <div class="why__media">
           <div class="why__media-card">
-            <svg viewBox="0 0 24 24" width="48" height="48"><path fill="currentColor" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1.06 14.54L7.4 12l1.41-1.41 2.12 2.12 4.24-4.24L16.6 9.88l-5.66 5.66z"/></svg>
+            <img class="why__illu" src="images/protected-home.svg" alt="" width="240" height="200" loading="lazy" />
             <h3>Licensed &amp; Insured</h3>
             <p>Trained, professional technicians you can welcome into your home with confidence.</p>
           </div>
@@ -341,6 +342,21 @@
             <blockquote>“Mice were getting into our kitchen all winter. They sealed every entry point and we haven’t seen one since. Worth every penny.”</blockquote>
             <figcaption><strong>Amélie R.</strong><span>Longueuil, QC</span></figcaption>
           </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FROM THE BLOG ===================== -->
+    <section class="section blog-teaser-section">
+      <div class="container">
+        <div class="section__head">
+          <span class="section__eyebrow">From the Blog</span>
+          <h2 class="section__title">Pest Tips &amp; Guides</h2>
+          <p class="section__lead">Practical advice to help you spot, prevent, and prepare for common pests.</p>
+        </div>
+        <div class="post-grid" id="blogTeaser"></div>
+        <div class="blog-teaser__more">
+          <a href="blog.html" class="btn btn--primary btn--lg">Visit the Blog</a>
         </div>
       </div>
     </section>
@@ -468,9 +484,9 @@
         <ul>
           <li><a href="#why">Why Choose Us</a></li>
           <li><a href="#process">How It Works</a></li>
+          <li><a href="blog.html">Blog</a></li>
           <li><a href="#contact">Free Quote</a></li>
           <li><a href="portal.html">Customer Login</a></li>
-          <li><a href="tel:+14389886709">Call Us</a></li>
         </ul>
       </div>
 
@@ -498,6 +514,8 @@
     <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M6.62 10.79a15.46 15.46 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.36 11.36 0 0 0 3.57.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.36 11.36 0 0 0 .57 3.57 1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
   </a>
 
+  <script src="js/blog-data.js"></script>
+  <script src="js/blog.js"></script>
   <script src="js/script.js"></script>
 </body>
 </html>
