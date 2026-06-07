@@ -134,13 +134,19 @@ cover image in `images/blog/` and point `cover` at it.
 
 ## Pictures / images
 
-The visuals are **custom SVG illustrations** in your brand colours (`images/` and `images/blog/`):
-blog cover art and a "protected home" graphic in the Why-Us section. SVGs are crisp at any size,
-load instantly, and never break.
+The site uses a mix of:
 
-**To use your own photos instead:** drop image files (JPg/PNG) into `images/` and change the
-relevant `<img src="...">` (in `index.html`) or the `cover:` field (in `js/blog-data.js`). Keep
-links **relative** (e.g. `images/my-photo.jpg`, never `/images/...`) so they work on GitHub Pages.
+- **Real photos** (`images/photos/`) — the homepage hero background and the four blog covers
+  (living room, kitchen, bedroom, leaves, brick house). These are **public-domain (CC0)** images
+  sourced via [Openverse](https://openverse.org) (rawpixel & Flickr), so they're free for
+  commercial use with **no attribution required**, and they're self-hosted so they never break.
+- **Custom brand illustrations** (`images/`, `images/blog/`) — e.g. the "protected home" graphic
+  in the Why-Us section. SVGs are crisp at any size and never break.
+
+**To swap in your own photos:** drop files into `images/photos/` and update the relevant
+`<img src="...">` or CSS `background` (the hero is in `css/styles.css` → `.hero__bg`), or the
+`cover:` field in `js/blog-data.js`. Keep links **relative** (e.g. `images/photos/my-photo.jpg`,
+never `/images/...`) so they work on GitHub Pages.
 
 ## Hosting — already live ✅
 
