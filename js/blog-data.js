@@ -16,7 +16,7 @@ window.SERENE_BLOG = [
     author: "Serene Touch Team",
     category: "Pest Tips",
     readTime: "4 min read",
-    cover: "images/blog/signs-of-cockroaches.svg",
+    cover: "images/photos/kitchen.webp",
     content: `
       <p>Cockroaches are nocturnal and shy, so by the time you actually see one in daylight, there are usually many more out of sight. The good news: they leave clues. Catching the signs early makes treatment faster, cheaper, and far less stressful.</p>
 
@@ -49,7 +49,7 @@ window.SERENE_BLOG = [
     author: "Serene Touch Team",
     category: "Prep Guide",
     readTime: "5 min read",
-    cover: "images/blog/prepare-for-bed-bug-treatment.svg",
+    cover: "images/photos/bedroom.webp",
     content: `
       <p>Bed bugs are one of the toughest pests to eliminate, and preparation is half the battle. The steps below help our technicians reach every hiding spot and stop the bugs from spreading while we work.</p>
 
@@ -82,7 +82,7 @@ window.SERENE_BLOG = [
     author: "Serene Touch Team",
     category: "Eco & Safety",
     readTime: "4 min read",
-    cover: "images/blog/eco-friendly-pest-control.svg",
+    cover: "images/photos/leaves.jpg",
     content: `
       <p>When people picture pest control, they often imagine clouds of harsh chemicals and having to leave the house for a day. Modern, eco-friendly methods are different — and for most homes, they're both safer and just as effective.</p>
 
@@ -112,7 +112,7 @@ window.SERENE_BLOG = [
     author: "Serene Touch Team",
     category: "Seasonal",
     readTime: "5 min read",
-    cover: "images/blog/seasonal-pest-guide.svg",
+    cover: "images/photos/house.webp",
     content: `
       <p>Pests follow the calendar. Knowing what's coming each season lets you stay one step ahead with a few easy habits. Here's a year-round guide for homes in the Greater Montreal area.</p>
 

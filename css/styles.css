@@ -262,7 +262,9 @@ a.topbar__item:hover { color: #fff; }
   background:
     radial-gradient(1100px 500px at 85% -10%, rgba(246, 195, 36, .18), transparent 60%),
     radial-gradient(900px 600px at 10% 110%, rgba(34, 197, 94, .20), transparent 55%),
-    linear-gradient(160deg, var(--navy-700) 0%, var(--navy-800) 45%, var(--navy-900) 100%);
+    linear-gradient(115deg, rgba(10, 44, 84, .95) 0%, rgba(14, 58, 107, .9) 42%, rgba(10, 44, 84, .74) 100%),
+    url("../images/photos/hero-living-room.webp") center / cover no-repeat;
+  background-color: var(--navy-800);
 }
 .hero__bg::after {
   content: "";
@@ -889,8 +891,12 @@ a.topbar__item:hover { color: #fff; }
 .post-card__media { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: var(--navy-800); }
 .post-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s var(--ease); }
 .post-card:hover .post-card__media img { transform: scale(1.05); }
+.post-card__media::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(10, 44, 84, .34), rgba(10, 44, 84, 0) 45%);
+}
 .post-card__cat {
-  position: absolute; top: 12px; left: 12px;
+  position: absolute; top: 12px; left: 12px; z-index: 2;
   background: var(--gold); color: #4a3500; font-family: "Poppins", sans-serif; font-weight: 700;
   font-size: .68rem; letter-spacing: .4px; padding: 5px 11px; border-radius: 999px;
 }
