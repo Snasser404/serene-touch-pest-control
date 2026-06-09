@@ -116,6 +116,34 @@ same sample data. Before using it with real people you need a backend. The piece
 3. **The assistant** — currently rule-based (fast, free, offline). It can be upgraded to a real
    AI by sending the customer's data + question to an LLM API. Tell me if you'd like that.
 
+## Service pages
+
+Each service has its own dedicated, SEO-optimized page — far better for ranking on searches like
+*"bed bug treatment Montreal"* than a single homepage.
+
+| Page | Pest |
+|------|------|
+| `ant-control.html` | Ants (incl. carpenter ants) |
+| `bed-bug-treatment.html` | Bed bugs |
+| `cockroach-control.html` | Cockroaches |
+| `rodent-control.html` | Mice & rats |
+
+Each has a unique write-up (signs → process → FAQ), a relevant photo, an FAQ section backed by
+**Google FAQ structured data**, **Service + LocalBusiness (PestControlService) schema**, and
+two-way links with the blog. The homepage cards and every footer point to these pages.
+
+**To edit the words**, open the matching `.html` file and edit the text directly (plain HTML).
+If you change an FAQ question, update **both** the visible `<details>` block **and** the matching
+entry in the `application/ld+json` FAQ script near the top of the file — Google requires them to
+match.
+
+**To add a new service**, copy one of these files, rename it (e.g. `wasp-control.html`), update
+the text/title/schema, then add a homepage card and footer link pointing to it.
+
+> Tip: after deploying, you can paste any page URL into Google's
+> [Rich Results Test](https://search.google.com/test/rich-results) to confirm the FAQ and Service
+> data is detected.
+
 ## Blog
 
 The blog is **data-driven** — you don't touch HTML to publish a post.
