@@ -36,7 +36,7 @@ window.SERENE_BLOG = [
       <p>Because roaches avoid light, a daytime sighting often signals that the hiding spots are crowded — a sign the population is larger than it appears.</p>
 
       <h2>What to do next</h2>
-      <p>Start by removing food and water sources: wipe up crumbs and grease, fix leaks, store food in sealed containers, and take out the trash regularly. Avoid store-bought sprays — they scatter roaches and can make an infestation harder to treat. The most reliable fix is a targeted gel-bait and crack-and-crevice treatment that works through the whole colony.</p>
+      <p>Start by removing food and water sources: wipe up crumbs and grease, fix leaks, store food in sealed containers, and take out the trash regularly. Avoid store-bought sprays — they scatter roaches and can make an infestation harder to treat. The most reliable fix is our <a href="cockroach-control.html">targeted gel-bait and crack-and-crevice treatment</a> that works through the whole colony.</p>
 
       <p>If you're spotting any of these signs, <a href="index.html#contact">request a free quote</a> or call <a href="tel:+14389886709">438-988-6709</a> — we offer fast, discreet, family- and pet-safe cockroach treatments.</p>
     `
@@ -69,7 +69,7 @@ window.SERENE_BLOG = [
       <p>Bed bugs love clutter because it gives them more places to hide. Bag and seal what you can — the less clutter, the fewer places for them to survive treatment.</p>
 
       <h2>What to expect on the day</h2>
-      <p>Our biological, heat-assisted approach is discreet and low-toxic. You'll be asked to stay out of treated rooms for a few hours, then ventilate. Keep sleeping in your own bed afterward — leaving the room actually encourages bed bugs to spread in search of a host. We'll confirm full elimination at your follow-up visit about two weeks later.</p>
+      <p>Our <a href="bed-bug-treatment.html">biological, heat-assisted bed bug treatment</a> is discreet and low-toxic. You'll be asked to stay out of treated rooms for a few hours, then ventilate. Keep sleeping in your own bed afterward — leaving the room actually encourages bed bugs to spread in search of a host. We'll confirm full elimination at your follow-up visit about two weeks later.</p>
 
       <p>Dealing with bed bugs? <a href="index.html#contact">Book a free inspection</a> or call <a href="tel:+14389886709">438-988-6709</a> for safe, effective, 100% confidential treatment.</p>
     `
@@ -93,7 +93,7 @@ window.SERENE_BLOG = [
       <p>Low-toxic, targeted products mean you don't have to move out or kennel your pets. We still recommend keeping children and animals out of treated areas for a few hours and ventilating afterward — simple precautions, not a major disruption to your life.</p>
 
       <h2>Targeted, not blanket spraying</h2>
-      <p>Blanket spraying exposes your whole home to product unnecessarily — and with some pests, like cockroaches, it actually backfires by scattering them. Targeted baiting and crack-and-crevice work delivers the treatment exactly where it's needed and leaves the rest of your home untouched.</p>
+      <p>Blanket spraying exposes your whole home to product unnecessarily — and with some pests, like <a href="cockroach-control.html">cockroaches</a>, it actually backfires by scattering them. Targeted baiting and crack-and-crevice work delivers the treatment exactly where it's needed and leaves the rest of your home untouched.</p>
 
       <h2>Just as effective</h2>
       <p>Eco-friendly doesn't mean weaker. Precise, science-based treatments often outperform heavy spraying because they target pests at the source — the nest or colony — and include prevention so the problem doesn't simply come back.</p>
@@ -117,13 +117,13 @@ window.SERENE_BLOG = [
       <p>Pests follow the calendar. Knowing what's coming each season lets you stay one step ahead with a few easy habits. Here's a year-round guide for homes in the Greater Montreal area.</p>
 
       <h2>Spring — ants and the first wave</h2>
-      <p>As temperatures rise, ants become active and start foraging indoors for food and water. Wipe up spills quickly, store sweet and greasy foods in sealed containers, and seal gaps around windows and doors. Spring is also the best time for a preventive treatment before populations build.</p>
+      <p>As temperatures rise, <a href="ant-control.html">ants</a> become active and start foraging indoors for food and water. Wipe up spills quickly, store sweet and greasy foods in sealed containers, and seal gaps around windows and doors. Spring is also the best time for a preventive treatment before populations build.</p>
 
       <h2>Summer — wasps, ants, and cockroaches</h2>
       <p>Warm weather brings peak activity. Wasps build nests under eaves and decks, ants reach full strength, and cockroaches thrive in the heat and humidity. Keep food covered at outdoor gatherings, empty bins often, and check quiet corners of the kitchen for early roach signs.</p>
 
       <h2>Fall — rodents seeking shelter</h2>
-      <p>As nights cool, mice and rats look for a warm place to overwinter — and a gap the width of a pencil is all a mouse needs. Seal entry points around the foundation, pipes, and vents, store food in metal or glass containers, and clear clutter from basements and garages.</p>
+      <p>As nights cool, <a href="rodent-control.html">mice and rats</a> look for a warm place to overwinter — and a gap the width of a pencil is all a mouse needs. Seal entry points around the foundation, pipes, and vents, store food in metal or glass containers, and clear clutter from basements and garages.</p>
 
       <h2>Winter — the quiet threat indoors</h2>
       <p>Pests don't disappear in winter; they move inside. Rodents nest in walls and attics, and bed bugs spread through holiday travel and guests. Keep an eye on storage areas, inspect luggage after trips, and don't ignore unusual sounds in the walls.</p>

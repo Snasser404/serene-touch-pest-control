@@ -103,4 +103,14 @@
   if (teaserEl) {
     teaserEl.innerHTML = POSTS.slice(0, 3).map(function (p) { return card(p); }).join("");
   }
+
+  /* ---------- 4) Related posts (service pages) ----------
+     Renders the posts named in data-slugs="a,b,c" (falls back to latest). */
+  var relEl = document.getElementById("relatedPosts");
+  if (relEl) {
+    var slugs = (relEl.getAttribute("data-slugs") || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    var picked = slugs.map(function (sl) { return POSTS.filter(function (p) { return p.slug === sl; })[0]; }).filter(Boolean);
+    if (!picked.length) picked = POSTS.slice(0, 3);
+    relEl.innerHTML = picked.map(function (p) { return card(p); }).join("");
+  }
 })();
