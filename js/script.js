@@ -38,9 +38,9 @@
       else openNav();
     });
 
-    // Close the drawer when a link is tapped
+    // Close the drawer when any link is tapped (including dropdown sub-links)
     nav.addEventListener("click", function (e) {
-      if (e.target.closest(".nav__link")) closeNav();
+      if (e.target.closest("a")) closeNav();
     });
 
     // Close on Escape

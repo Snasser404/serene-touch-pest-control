@@ -59,7 +59,16 @@
       <nav class="nav" id="nav" aria-label="Main navigation">
         <ul class="nav__list">
           <li><a href="index.html" class="nav__link">Home</a></li>
-          <li><a href="index.html#services" class="nav__link is-active">Services</a></li>
+          <li class="nav__has-sub">
+            <a href="index.html#services" class="nav__link is-active">Services <svg class="nav__caret" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg></a>
+            <ul class="nav__sub">
+              <li><a href="ant-control.html">Ant Control</a></li>
+              <li><a href="bed-bug-treatment.html">Bed Bug Treatment</a></li>
+              <li><a href="cockroach-control.html" aria-current="page">Cockroach Control</a></li>
+              <li><a href="rodent-control.html">Rodent Control</a></li>
+              <li><a href="index.html#services" class="nav__sub-all">All services</a></li>
+            </ul>
+          </li>
           <li><a href="index.html#why" class="nav__link">Why Us</a></li>
           <li><a href="index.html#process" class="nav__link">How It Works</a></li>
           <li><a href="blog.html" class="nav__link">Blog</a></li>
