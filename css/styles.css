@@ -230,6 +230,21 @@ a.topbar__item:hover { color: #fff; }
 }
 .nav__sub a:hover { background: var(--bg-soft); color: var(--green-dark); }
 .nav__sub a[aria-current="page"] { background: var(--bg-soft); color: var(--green-dark); }
+
+/* "Log In" in the top utility bar */
+.topbar__login { font-weight: 600; }
+.topbar__login svg { fill: var(--gold); }
+
+/* Items that should only appear inside the mobile drawer */
+.nav__mobile-only { display: none; }
+@media (max-width: 880px) {
+  .nav__mobile-only { display: block; }
+  .nav__mobile-only .nav__link { color: var(--green-dark); font-weight: 600; }
+}
+/* Give the top bar room on mid-size screens */
+@media (max-width: 1040px) {
+  .topbar__hours { display: none; }
+}
 .nav__sub-all { border-top: 1px solid var(--line); margin-top: 4px; color: var(--navy-700) !important; font-weight: 600 !important; }
 
 /* Mobile: show the sub-links inline inside the drawer */
