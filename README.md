@@ -28,7 +28,7 @@ Most details were filled in from your poster. A few are **placeholders** — upd
 | Placeholder | Where | Replace with |
 |-------------|-------|--------------|
 | `info@serenetouchpest.ca` | top bar, contact, footer | Your real email |
-| `Greater Montreal & surrounding areas` | top bar, contact, footer | Your real service area |
+| `the Greater Toronto Area & surrounding areas` | top bar, contact, footer | Your real service area |
 | `Mon–Sat: 8am–7pm` | top bar, contact, footer | Your real hours |
 | `10+`, `5,000+`, `4.9★` | hero card | Your real stats (or remove) |
 | Testimonials (Sarah M., David L., Amélie R.) | "Reviews" section | **Real reviews only** — the sample ones are illustrative |
@@ -119,7 +119,7 @@ same sample data. Before using it with real people you need a backend. The piece
 ## Service pages
 
 Each service has its own dedicated, SEO-optimized page — far better for ranking on searches like
-*"bed bug treatment Montreal"* than a single homepage.
+*"bed bug treatment Toronto"* than a single homepage.
 
 | Page | Pest |
 |------|------|

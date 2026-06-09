@@ -43,10 +43,10 @@
     ],
 
     customers: [
-      { id: "C1", name: "Jane Doe",      firstName: "Jane",   email: "jane@example.com",   phone: "438-555-0199", address: "123 Maple Street, Montréal, QC  H2X 1Y6",          plan: "Quarterly Protection Plan", memberSince: "2025-09-12" },
-      { id: "C2", name: "Robert Chen",   firstName: "Robert", email: "robert@example.com", phone: "438-555-0118", address: "88 Rue Saint-Denis, Montréal, QC  H2X 3K6",         plan: "One-Time Treatment",        memberSince: "2026-05-20" },
-      { id: "C3", name: "Maria Gomez",   firstName: "Maria",  email: "maria@example.com",  phone: "438-555-0177", address: "450 Avenue du Parc, Laval, QC  H7N 3R9",           plan: "Quarterly Protection Plan", memberSince: "2025-11-03" },
-      { id: "C4", name: "Luc Bélanger",  firstName: "Luc",    email: "luc@example.com",    phone: "438-555-0133", address: "1200 Boul. René-Lévesque, Longueuil, QC  J4K 2T5", plan: "Annual Prevention Plan",    memberSince: "2026-01-15" }
+      { id: "C1", name: "Jane Doe",      firstName: "Jane",   email: "jane@example.com",   phone: "438-555-0199", address: "123 Maple Avenue, Toronto, ON  M4B 1B4",          plan: "Quarterly Protection Plan", memberSince: "2025-09-12" },
+      { id: "C2", name: "Robert Chen",   firstName: "Robert", email: "robert@example.com", phone: "438-555-0118", address: "88 Queen Street West, Toronto, ON  M5H 2N5",         plan: "One-Time Treatment",        memberSince: "2026-05-20" },
+      { id: "C3", name: "Maria Gomez",   firstName: "Maria",  email: "maria@example.com",  phone: "438-555-0177", address: "450 Burnhamthorpe Road, Mississauga, ON  L5B 2C9",           plan: "Quarterly Protection Plan", memberSince: "2025-11-03" },
+      { id: "C4", name: "Luc Bélanger",  firstName: "Luc",    email: "luc@example.com",    phone: "438-555-0133", address: "1200 Steeles Avenue, Brampton, ON  L6T 1A1", plan: "Annual Prevention Plan",    memberSince: "2026-01-15" }
     ],
 
     /* Each appointment links a customer + a technician + a treatment. */

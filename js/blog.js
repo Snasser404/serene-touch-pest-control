@@ -36,7 +36,7 @@
   var ctaBlock =
     '<aside class="post-cta">' +
       '<h3>Got a pest problem?</h3>' +
-      '<p>Serene Touch offers fast, eco-friendly, family &amp; pet-safe pest control across Greater Montreal.</p>' +
+      '<p>Serene Touch offers fast, eco-friendly, family &amp; pet-safe pest control across the Greater Toronto Area.</p>' +
       '<div class="post-cta__btns">' +
         '<a class="btn btn--primary" href="index.html#contact">Get a Free Quote</a>' +
         '<a class="btn btn--ghost" href="tel:+14389886709">Call 438-988-6709</a>' +

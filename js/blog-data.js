@@ -106,7 +106,7 @@ window.SERENE_BLOG = [
   },
   {
     slug: "seasonal-pest-guide",
-    title: "A Seasonal Pest Guide for Montreal Homes",
+    title: "A Seasonal Pest Guide for Toronto Homes",
     excerpt: "Different pests show up at different times of year. Here's what to watch for each season — and the simple prevention steps that keep small problems from becoming big ones.",
     date: "2026-05-28",
     author: "Serene Touch Team",
@@ -114,7 +114,7 @@ window.SERENE_BLOG = [
     readTime: "5 min read",
     cover: "images/photos/house.webp",
     content: `
-      <p>Pests follow the calendar. Knowing what's coming each season lets you stay one step ahead with a few easy habits. Here's a year-round guide for homes in the Greater Montreal area.</p>
+      <p>Pests follow the calendar. Knowing what's coming each season lets you stay one step ahead with a few easy habits. Here's a year-round guide for homes in the Greater Toronto Area.</p>
 
       <h2>Spring — ants and the first wave</h2>
       <p>As temperatures rise, <a href="ant-control.html">ants</a> become active and start foraging indoors for food and water. Wipe up spills quickly, store sweet and greasy foods in sealed containers, and seal gaps around windows and doors. Spring is also the best time for a preventive treatment before populations build.</p>
