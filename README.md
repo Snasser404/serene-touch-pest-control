@@ -176,6 +176,17 @@ The site uses a mix of:
 `cover:` field in `js/blog-data.js`. Keep links **relative** (e.g. `images/photos/my-photo.jpg`,
 never `/images/...`) so they work on GitHub Pages.
 
+## Sharing, SEO files & UX extras
+
+- **`images/og-image.png`** — the branded card shown when the site is shared on WhatsApp,
+  Facebook, LinkedIn, iMessage, etc. (wired up via Open Graph tags on every page).
+- **`sitemap.xml` / `robots.txt`** — submit the sitemap in Google Search Console to speed up
+  indexing. The portal is excluded from search engines.
+- **`404.html`** — branded "page not found" page (GitHub Pages serves it automatically).
+- **Injected UX features** (in `js/script.js`, run on every marketing page): skip-to-content
+  link, back-to-top button, hero stat count-up, one-at-a-time FAQ accordions, and a reading
+  progress bar on blog articles. All respect the visitor's reduced-motion preference.
+
 ## Hosting — already live ✅
 
 The site is deployed on **GitHub Pages**:
