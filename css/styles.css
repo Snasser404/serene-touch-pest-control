@@ -1144,3 +1144,91 @@ a.topbar__item:hover { color: #fff; }
 @media (max-width: 620px) {
   .post-grid { grid-template-columns: 1fr; }
 }
+
+/* ===================================================================
+   POLISH PASS — micro-interactions, a11y, visual upgrades
+=================================================================== */
+::selection { background: var(--gold); color: var(--navy-900); }
+html { accent-color: var(--green); }
+
+/* Skip-to-content (injected by JS, appears on keyboard focus) */
+.skip-link {
+  position: fixed; top: -56px; left: 16px; z-index: 300;
+  background: var(--navy-900); color: #fff;
+  font-family: "Poppins", sans-serif; font-weight: 600; font-size: .92rem;
+  padding: 12px 20px; border-radius: 0 0 12px 12px;
+  transition: top .2s var(--ease);
+}
+.skip-link:focus { top: 0; }
+
+/* Header compacts slightly once you scroll */
+.header__inner { transition: min-height .25s var(--ease); }
+.header.is-scrolled .header__inner { min-height: 62px; }
+
+/* Richer primary / gold buttons */
+.btn--primary { background-image: linear-gradient(135deg, #34d399, var(--green-dark)); }
+.btn--primary:hover { box-shadow: 0 14px 30px rgba(22, 163, 74, .38); }
+.btn--gold { background-image: linear-gradient(135deg, #ffd84d, var(--gold-dark)); }
+.btn--gold:hover { box-shadow: 0 14px 30px rgba(224, 171, 6, .4); }
+
+/* Service cards: photo headers with overlapping icon */
+.service-card__media {
+  display: block; position: relative;
+  margin: -30px -26px 0;
+  aspect-ratio: 16 / 10; overflow: hidden;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.service-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .45s var(--ease); }
+.service-card:hover .service-card__media img { transform: scale(1.06); }
+.service-card__media::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10, 44, 84, .2), transparent 55%);
+}
+.service-card__media + .service-card__icon,
+.service-card__media ~ .service-card__icon {
+  position: relative; z-index: 2; margin-top: -32px;
+  border: 3px solid #fff; box-shadow: var(--shadow-sm);
+}
+.service-card__badge { z-index: 3; }
+
+/* Testimonials: avatars + decorative quote mark */
+.testimonial { position: relative; }
+.testimonial::before {
+  content: "\201C"; position: absolute; top: 2px; right: 22px;
+  font-family: Georgia, serif; font-size: 4.8rem; line-height: 1;
+  color: var(--blue-100); pointer-events: none;
+}
+.testimonial figcaption { flex-direction: row; align-items: center; gap: 12px; }
+.testimonial figcaption .testimonial__avatar {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  font-family: "Poppins", sans-serif; font-weight: 700; font-size: .92rem; color: #fff;
+  background: linear-gradient(135deg, var(--navy-700), var(--navy-800));
+}
+.testimonials__grid .testimonial:nth-child(2) .testimonial__avatar { background: linear-gradient(135deg, var(--green), var(--green-dark)); }
+.testimonials__grid .testimonial:nth-child(3) .testimonial__avatar { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #4a3500; }
+.testimonial figcaption .testimonial__who { display: flex; flex-direction: column; }
+
+/* Back-to-top (injected by JS) */
+.to-top {
+  position: fixed; right: 22px; bottom: 22px; z-index: 89;
+  width: 46px; height: 46px; border-radius: 14px;
+  border: 1px solid var(--line); background: #fff; color: var(--navy-800);
+  display: grid; place-items: center; cursor: pointer;
+  box-shadow: var(--shadow);
+  opacity: 0; visibility: hidden; transform: translateY(10px);
+  transition: opacity .25s var(--ease), transform .25s var(--ease), visibility .25s, color .15s;
+}
+.to-top.is-show { opacity: 1; visibility: visible; transform: none; }
+.to-top:hover { color: var(--green-dark); transform: translateY(-2px); }
+.to-top svg { fill: currentColor; }
+@media (max-width: 880px) { .to-top { right: 18px; bottom: 88px; } }
+
+/* Reading progress bar on blog articles (injected by JS) */
+.read-progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 320;
+  background: linear-gradient(90deg, var(--gold), var(--green));
+}
+
+/* Required-field marker */
+.req { color: #d33; margin-left: 2px; }

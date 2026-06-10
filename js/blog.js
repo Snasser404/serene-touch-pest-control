@@ -75,6 +75,19 @@
       var md = document.querySelector('meta[name="description"]');
       if (md) md.setAttribute("content", post.excerpt);
 
+      // Point canonical + og tags at this specific article
+      var canon = document.querySelector('link[rel="canonical"]');
+      if (!canon) {
+        canon = document.createElement("link");
+        canon.rel = "canonical";
+        document.head.appendChild(canon);
+      }
+      canon.href = location.origin + location.pathname + "?slug=" + post.slug;
+      var ogT = document.querySelector('meta[property="og:title"]');
+      if (ogT) ogT.setAttribute("content", post.title);
+      var ogD = document.querySelector('meta[property="og:description"]');
+      if (ogD) ogD.setAttribute("content", post.excerpt);
+
       var related = POSTS.filter(function (p) { return p.slug !== post.slug; }).slice(0, 3);
 
       artEl.innerHTML =

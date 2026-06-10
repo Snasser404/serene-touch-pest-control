@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /portal.html
+
+Sitemap: https://snasser404.github.io/serene-touch-pest-control/sitemap.xml
