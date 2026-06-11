@@ -51,7 +51,7 @@
 
   /* ---------- Scroll reveal animations ---------- */
   var revealTargets = document.querySelectorAll(
-    ".feature, .service-card, .process-step, .testimonial, .why__media-card, .why__content, .contact__form, .contact__info, .section__head"
+    ".feature, .service-card, .process-step, .testimonial, .why__media-card, .why__content, .contact__form, .contact__info, .section__head, .head-split, .scard, .tile, .step2, .quote, .stat2"
   );
   revealTargets.forEach(function (el) { el.classList.add("reveal"); });
 
@@ -172,7 +172,7 @@
   });
 
   /* ---------- Hero stats count-up ---------- */
-  var stats = document.querySelectorAll(".hero__card-stats strong");
+  var stats = document.querySelectorAll(".hero__card-stats strong, [data-count]");
   if (stats.length && "IntersectionObserver" in window && !reduceMotion) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
