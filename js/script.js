@@ -104,6 +104,17 @@
   var note = document.getElementById("formNote");
 
   if (form) {
+    var keyField = form.querySelector('[name="access_key"]');
+    var accessKey = keyField ? keyField.value : "";
+    // Live only once a real Web3Forms key is pasted in; until then, demo mode.
+    var isLive = accessKey && accessKey.indexOf("YOUR_") !== 0 && accessKey.length > 10;
+    var submitBtn = form.querySelector('button[type="submit"]');
+
+    function firstName() {
+      var n = (document.getElementById("name") || {}).value || "there";
+      return n.trim().split(" ")[0] || "there";
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
 
@@ -116,16 +127,52 @@
         return;
       }
 
-      var name = (document.getElementById("name") || {}).value || "there";
-      var first = name.trim().split(" ")[0];
-
-      if (note) {
-        note.textContent =
-          "Thanks, " + first + "! Your request has been received — we’ll be in touch shortly. " +
-          "For urgent issues, call 438-988-6709.";
-        note.className = "form-note is-success";
+      // Demo mode: no backend wired yet — confirm locally so nothing looks broken.
+      if (!isLive) {
+        if (note) {
+          note.textContent =
+            "Thanks, " + firstName() + "! (Demo mode — add your Web3Forms key to start " +
+            "receiving these.) For urgent issues, call 438-988-6709.";
+          note.className = "form-note is-success";
+        }
+        form.reset();
+        return;
       }
-      form.reset();
+
+      // Live mode: send to Web3Forms via fetch, keep the inline success message.
+      var btnText = submitBtn ? submitBtn.textContent : "";
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Sending…"; }
+      if (note) { note.textContent = "Sending your request…"; note.className = "form-note"; }
+
+      fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Accept": "application/json" },
+        body: new FormData(form)
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data.success) {
+            if (note) {
+              note.textContent =
+                "Thanks, " + firstName() + "! Your request is in — we'll be in touch shortly. " +
+                "For urgent issues, call 438-988-6709.";
+              note.className = "form-note is-success";
+            }
+            form.reset();
+          } else {
+            throw new Error(data.message || "submission failed");
+          }
+        })
+        .catch(function () {
+          if (note) {
+            note.textContent =
+              "Sorry — something went wrong sending that. Please call or text us at 438-988-6709.";
+            note.className = "form-note is-error";
+          }
+        })
+        .then(function () {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = btnText; }
+        });
     });
   }
 })();
