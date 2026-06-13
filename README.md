@@ -191,7 +191,7 @@ never `/images/...`) so they work on GitHub Pages.
 
 The site is deployed on **GitHub Pages**:
 
-- **Live site:** <https://snasser404.github.io/serene-touch-pest-control/>
+- **Live site:** <https://serenetouch.ca/>
 - **Repo:** <https://github.com/Snasser404/serene-touch-pest-control>
 
 **To publish changes**, commit and push — Pages rebuilds automatically in ~1–2 minutes:
