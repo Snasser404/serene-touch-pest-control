@@ -1,19 +1,32 @@
 /* ===================================================================
    Serene Touch — Customer Portal logic  (customer / technician / admin)
    -------------------------------------------------------------------
-   NOTE: This is a front-end DEMO. The "login" is checked in the browser
-   only and is NOT secure, and all demo users share the same sample data.
-   Before using with real people, replace the auth + data layer with a
-   real backend (see README). The workflow actions below persist to
-   localStorage so switching roles shows the effects of each other's work.
+   Runs in one of three modes:
+     • REAL  — js/supabase-config.js holds real keys. Secure auth + data
+               via Supabase (Row-Level Security + SECURITY DEFINER RPCs).
+     • DEMO  — open portal.html?demo=1 to explore with local sample data
+               (browser-only, not secure — for showing the concept).
+     • SETUP — keys not pasted yet → a friendly "connect Supabase" screen.
+   See PORTAL-SETUP.md for setup.
 =================================================================== */
 (function () {
   "use strict";
 
-  var DATA = window.SERENE_PORTAL_DATA;
-  var SESSION_KEY = "serene_portal_session";   // { role, refId, email }
-  var APPT_KEY = "serene_portal_appts";        // appointment overrides by id
-  function prepKey(apptId) { return "serene_portal_prep_" + apptId; }
+  /* ================================================================
+     MODE + STATE
+  ================================================================ */
+  var CFG = window.SERENE_SUPABASE || {};
+  function isPlaceholder(v) { return !v || String(v).indexOf("YOUR_") === 0; }
+  var SUPA_OK = !isPlaceholder(CFG.url) && !isPlaceholder(CFG.anonKey) && !!window.supabase;
+  var DEMO = /[?&]demo=1\b/.test(location.search);
+  var MODE = SUPA_OK && !DEMO ? "real" : (DEMO ? "demo" : "setup");
+
+  var DATA = window.SERENE_PORTAL_DATA;     // static content (+ demo sample data)
+  var sb = null;                            // supabase client (real mode)
+  var currentUserId = null;
+
+  // The dashboards render from STATE (same shape in real + demo mode).
+  var STATE = { role: null, me: null, customers: [], technicians: [], appointments: [], history: {} };
 
   /* ---------- tiny helpers ---------- */
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -24,10 +37,13 @@
     return n;
   }
   function escapeHtml(s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
+  function uniq(arr) { return arr.filter(function (v, i) { return v && arr.indexOf(v) === i; }); }
+  function firstWord(s) { return s ? String(s).split(" ")[0] : s; }
+  function initials(name) { return String(name || "ST").split(" ").map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase(); }
   function fmtFullDate(iso) { return new Date(iso).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }); }
   function fmtDate(iso) { return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }); }
   function fmtDateShort(iso) { return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
@@ -60,108 +76,75 @@
   };
 
   /* ================================================================
-     STORE  (base data + saved workflow overrides)
+     DATA MAPPERS + STORE  (read from STATE)
   ================================================================ */
-  function loadOverrides() { try { return JSON.parse(localStorage.getItem(APPT_KEY)) || {}; } catch (e) { return {}; } }
-  function saveOverride(id, patch) {
-    var o = loadOverrides();
-    o[id] = Object.assign({}, o[id], patch);
-    localStorage.setItem(APPT_KEY, JSON.stringify(o));
+  function mapProfile(r) {
+    return {
+      id: r.id, name: r.full_name || r.email || "—", firstName: firstWord(r.full_name) || "there",
+      email: r.email, phone: r.phone, address: r.address, plan: r.plan || "Service plan",
+      memberSince: r.member_since, initials: initials(r.full_name)
+    };
   }
-  function getAppointments() {
-    var o = loadOverrides();
-    return DATA.appointments.map(function (a) { return Object.assign({}, a, o[a.id] || {}); });
+  function mapAppt(r) {
+    return {
+      id: r.id, customerId: r.customer_id, technicianId: r.technician_id, technicianName: r.technician_name,
+      pest: r.pest, treatmentType: r.treatment_type, targets: r.targets,
+      start: r.starts_at, end: r.ends_at || r.starts_at, status: r.status,
+      revisit: r.revisit_at, coverageEnds: r.coverage_ends_at, reEntryHours: r.re_entry_hours || 0,
+      notes: r.notes, result: r.result, prepDone: r.prep_done || {}
+    };
   }
-  function customerById(id) { return DATA.customers.filter(function (c) { return c.id === id; })[0]; }
-  function techById(id) { return id ? DATA.technicians.filter(function (t) { return t.id === id; })[0] : null; }
-  function prepTotalFor(pest) { return (DATA.prepByPest[pest] || []).length + DATA.generalPrep.length; }
-  function prepDoneFor(apptId) {
-    try {
-      var s = JSON.parse(localStorage.getItem(prepKey(apptId))) || {};
-      return Object.keys(s).filter(function (k) { return s[k]; }).length;
-    } catch (e) { return 0; }
+  function getAppointments() { return STATE.appointments; }
+  function customerById(id) { return STATE.customers.filter(function (c) { return c.id === id; })[0]; }
+  function techById(id) { return id ? STATE.technicians.filter(function (t) { return t.id === id; })[0] : null; }
+  function techNameFor(a) { return a.technicianName || (techById(a.technicianId) ? techById(a.technicianId).name : null); }
+
+  function buildPrepItems(pest) {
+    var items = [];
+    (DATA.prepByPest[pest] || []).forEach(function (t) { items.push({ text: t, group: "For your " + pest.toLowerCase() + " treatment" }); });
+    DATA.generalPrep.forEach(function (t) { items.push({ text: t, group: "For every visit" }); });
+    return items;
+  }
+  function prepTotalFor(pest) { return buildPrepItems(pest).length; }
+  function prepDoneCount(appt) {
+    var map = appt.prepDone || {};
+    return buildPrepItems(appt.pest).filter(function (it) { return map[it.text]; }).length;
   }
 
-  /* status meta -> label + css modifier */
   function statusMeta(status) {
-    var map = {
-      "Unassigned": "unassigned",
-      "Scheduled": "scheduled",
-      "En route": "route",
-      "In progress": "progress",
-      "Completed": "done"
-    };
-    return map[status] || "scheduled";
+    return ({ "Unassigned": "unassigned", "Scheduled": "scheduled", "En route": "route", "In progress": "progress", "Completed": "done", "Cancelled": "unassigned" })[status] || "scheduled";
   }
   function badge(status) { return '<span class="badge badge--' + statusMeta(status) + '">' + status + "</span>"; }
 
   /* ================================================================
-     AUTH + ROUTING
+     VIEW REFERENCES
   ================================================================ */
-  function getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; } }
-  function setSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
-  function signOut() { localStorage.removeItem(SESSION_KEY); location.reload(); }
-
   var loginView = $("#loginView");
   var appShell = $("#appShell");
   var views = { customer: $("#customerView"), technician: $("#techView"), admin: $("#adminView") };
 
-  function showLogin() {
-    appShell.classList.add("hidden");
-    loginView.classList.remove("hidden");
-  }
-  function route() {
-    var s = getSession();
-    if (!s) { showLogin(); return; }
-    loginView.classList.add("hidden");
-    appShell.classList.remove("hidden");
-    Object.keys(views).forEach(function (k) { views[k].classList.toggle("hidden", k !== s.role); });
-    setAppbar(s);
-    if (s.role === "customer") renderCustomer(s);
-    else if (s.role === "technician") renderTechnician(s);
-    else renderAdmin(s);
+  function showLogin() { appShell.classList.add("hidden"); loginView.classList.remove("hidden"); }
+  function showApp() { loginView.classList.add("hidden"); appShell.classList.remove("hidden"); }
+
+  function routeTo(role) {
+    showApp();
+    Object.keys(views).forEach(function (k) { views[k].classList.toggle("hidden", k !== role); });
+    setAppbar(role);
+    if (role === "customer") renderCustomer();
+    else if (role === "technician") renderTechnician();
+    else renderAdmin();
   }
 
-  function setAppbar(s) {
-    var name = "User", role = "", sub = "PORTAL", av = "ST";
-    if (s.role === "customer") {
-      var c = customerById(s.refId);
-      name = c.name; role = c.plan; sub = "CUSTOMER PORTAL"; av = initials(c.name);
-    } else if (s.role === "technician") {
-      var t = techById(s.refId);
-      name = t.name; role = "Technician"; sub = "TECHNICIAN PORTAL"; av = t.initials;
-    } else {
-      name = "Operations Admin"; role = "Administrator"; sub = "ADMIN CONSOLE"; av = "AD";
-    }
+  function setAppbar(role) {
+    var name = "User", sub = "PORTAL", roleLabel = "", av = "ST";
+    if (role === "customer") { name = STATE.me.name; roleLabel = STATE.me.plan; sub = "CUSTOMER PORTAL"; av = STATE.me.initials; }
+    else if (role === "technician") { name = STATE.me.name; roleLabel = "Technician"; sub = "TECHNICIAN PORTAL"; av = STATE.me.initials; }
+    else { name = STATE.me.name || "Operations Admin"; roleLabel = "Administrator"; sub = "ADMIN CONSOLE"; av = STATE.me.initials || "AD"; }
     $("#userName").textContent = name;
-    $("#userRole").textContent = role;
+    $("#userRole").textContent = roleLabel;
     $("#appbarSub").textContent = sub;
     $("#userAvatar").textContent = av;
   }
-  function initials(name) { return name.split(" ").map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase(); }
-
-  // Login form (matches a demo account)
-  var form = $("#loginForm"), errEl = $("#loginError");
-  if (form) {
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var email = ($("#loginEmail").value || "").trim().toLowerCase();
-      var pass = $("#loginPassword").value || "";
-      var acct = DATA.accounts.filter(function (a) { return a.email === email && a.password === pass; })[0];
-      if (acct) { errEl.textContent = ""; setSession({ role: acct.role, refId: acct.refId, email: acct.email }); route(); }
-      else { errEl.textContent = "Incorrect email or password. Try a demo dashboard below."; }
-    });
-  }
-  // Role demo buttons
-  Array.prototype.forEach.call(document.querySelectorAll(".role-demo"), function (btn) {
-    btn.addEventListener("click", function () {
-      var role = btn.getAttribute("data-role");
-      var acct = DATA.accounts.filter(function (a) { return a.role === role; })[0];
-      if (acct) { setSession({ role: acct.role, refId: acct.refId, email: acct.email }); route(); }
-    });
-  });
-  var soBtn = $("#signOutBtn");
-  if (soBtn) soBtn.addEventListener("click", signOut);
 
   /* ================================================================
      CUSTOMER DASHBOARD
@@ -171,42 +154,51 @@
   function activeApptFor(customerId) {
     var list = getAppointments().filter(function (a) { return a.customerId === customerId; })
       .sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
-    return list.filter(function (a) { return a.status !== "Completed"; })[0] || list[list.length - 1];
+    return list.filter(function (a) { return a.status !== "Completed" && a.status !== "Cancelled"; })[0] || list[list.length - 1];
   }
 
-  function renderCustomer(s) {
-    var c = customerById(s.refId);
-    var appt = activeApptFor(s.refId);
+  function renderCustomer() {
+    var c = STATE.me;
+    var appt = activeApptFor(c.id);
+    if (!appt) {
+      ASSIST_APPT = null; ASSIST_CUSTOMER = c;
+      $("#welcomeTitle").textContent = "Hi " + c.firstName + " 👋";
+      $("#apptBadge").textContent = "None scheduled";
+      $("#bannerStrong").textContent = "No upcoming visit yet";
+      $("#bannerSpan").textContent = "We'll let you know as soon as your next treatment is booked.";
+      $("#apptBody").innerHTML = '<p class="muted-note">You have no upcoming appointment. Call us at <a href="tel:+14389886709">438-988-6709</a> to book one.</p>';
+      $("#treatBody").innerHTML = ""; $("#timeline").innerHTML = ""; $("#prepList").innerHTML = "";
+      renderHistory(c.id);
+      return;
+    }
     ASSIST_APPT = appt; ASSIST_CUSTOMER = c;
+    var tName = techNameFor(appt);
 
     $("#welcomeTitle").textContent = "Hi " + c.firstName + " 👋";
     $("#apptBadge").textContent = appt.status;
     $("#apptBadge").className = "card__badge badge--" + statusMeta(appt.status);
 
-    // Banner adapts to live status
     var bs = $("#bannerStrong"), bsp = $("#bannerSpan");
     if (appt.status === "Completed") {
       bs.textContent = "Treatment complete ✅";
-      bsp.textContent = "Your follow-up (revisit) is on " + fmtFullDate(appt.revisit) + ".";
+      bsp.textContent = appt.revisit ? "Your follow-up (revisit) is on " + fmtFullDate(appt.revisit) + "." : "Thank you — your visit is complete.";
     } else if (appt.status === "En route") {
-      bs.textContent = appt.technicianId ? (techById(appt.technicianId).firstName + " is on the way! 🚐") : "Your technician is on the way! 🚐";
+      bs.textContent = (tName ? firstWord(tName) + " is on the way! 🚐" : "Your technician is on the way! 🚐");
       bsp.textContent = "Arriving for your " + appt.pest.toLowerCase() + " treatment around " + fmtTime(appt.start) + ".";
     } else if (appt.status === "In progress") {
       bs.textContent = "Your treatment is in progress 🛠️";
       bsp.textContent = "Your technician is on site working on your " + appt.pest.toLowerCase() + " treatment.";
     } else {
       bs.textContent = "Your next treatment is " + relDays(appt.start);
-      bsp.textContent = fmtFullDate(appt.start) + " · " + fmtTime(appt.start) +
-        (appt.technicianId ? " with " + techById(appt.technicianId).firstName : "");
+      bsp.textContent = fmtFullDate(appt.start) + " · " + fmtTime(appt.start) + (tName ? " with " + firstWord(tName) : "");
     }
 
-    // Appointment card
     var box = $("#apptBody"); box.innerHTML = "";
     var dl = el("div", "dl");
     dl.appendChild(dlRow(IC.calendar, "Date", fmtFullDate(appt.start)));
     dl.appendChild(dlRow(IC.clock, "Time", fmtTime(appt.start) + " – " + fmtTime(appt.end) + " (about 90 min)"));
-    dl.appendChild(dlRow(IC.user, "Technician", appt.technicianId ? techById(appt.technicianId).name : "To be assigned"));
-    dl.appendChild(dlRow(IC.pin, "Address", c.address));
+    dl.appendChild(dlRow(IC.user, "Technician", tName || "To be assigned"));
+    dl.appendChild(dlRow(IC.pin, "Address", c.address || "On file"));
     box.appendChild(dl);
     if (appt.notes) box.appendChild(el("div", "note", "<strong>Technician note:</strong> " + escapeHtml(appt.notes)));
     var actions = el("div", "card__actions");
@@ -215,40 +207,39 @@
     box.appendChild(actions);
     $("#addCalBtn").addEventListener("click", function () { downloadICS(appt, c); });
 
-    // Treatment card
     var tb = $("#treatBody"); tb.innerHTML = "";
     var dl2 = el("div", "dl");
     dl2.appendChild(dlRow(IC.bug, "Pest", appt.pest));
-    dl2.appendChild(dlRow(IC.flask, "Treatment", appt.treatmentType));
-    dl2.appendChild(dlRow(IC.pin, "Focus area", "Mainly your " + appt.targets + "."));
+    dl2.appendChild(dlRow(IC.flask, "Treatment", appt.treatmentType || "—"));
+    dl2.appendChild(dlRow(IC.pin, "Focus area", appt.targets ? ("Mainly your " + appt.targets + ".") : "—"));
     tb.appendChild(dl2);
     tb.appendChild(el("div", "note", "🌿 <strong>Family &amp; pet safe.</strong> Keep children and pets out of treated areas for about " +
       appt.reEntryHours + " hours after the visit, then ventilate by opening a few windows."));
 
     renderTimeline(appt);
     renderPrep(appt);
-    renderHistory(s.refId);
+    renderHistory(c.id);
     initAssistant();
   }
 
   function dlRow(icon, label, value) {
     var row = el("div", "dl__row");
-    row.innerHTML = icon + '<div><span class="dl__label">' + label + '</span><div class="dl__value">' + value + "</div></div>";
+    row.innerHTML = icon + '<div><span class="dl__label">' + label + '</span><div class="dl__value">' + escapeHtml(value) + "</div></div>";
     return row;
   }
 
   function renderTimeline(appt) {
     var now = Date.now();
+    var revisit = appt.revisit || addDaysISO(appt.start, 14);
+    var coverage = appt.coverageEnds || addDaysISO(appt.start, 90);
     var nodes = [
-      { passedBy: appt.end, date: fmtDate(appt.start), title: "Treatment Visit", desc: appt.treatmentType + "." },
-      { passedBy: appt.revisit, date: "1–2 weeks", title: "Settle-In Period", desc: "The treatment works through the colony. Some activity is normal — that's expected." },
-      { passedBy: addDaysISO(appt.revisit, 1), date: fmtDate(appt.revisit), title: "Follow-Up Visit (Revisit)", desc: "We check the results and re-treat free of charge if anything remains." },
-      { passedBy: appt.coverageEnds, date: "Through " + fmtDate(appt.coverageEnds), title: "Plan Coverage", desc: "You stay protected under your " + ASSIST_CUSTOMER.plan + ", with free return visits if pests come back." }
+      { passedBy: appt.end, date: fmtDate(appt.start), title: "Treatment Visit", desc: (appt.treatmentType || "Treatment") + "." },
+      { passedBy: revisit, date: "1–2 weeks", title: "Settle-In Period", desc: "The treatment works through the colony. Some activity is normal — that's expected." },
+      { passedBy: addDaysISO(revisit, 1), date: fmtDate(revisit), title: "Follow-Up Visit (Revisit)", desc: "We check the results and re-treat free of charge if anything remains." },
+      { passedBy: coverage, date: "Through " + fmtDate(coverage), title: "Plan Coverage", desc: "You stay protected under your " + escapeHtml(STATE.me.plan) + ", with free return visits if pests come back." }
     ];
     var cur = nodes.findIndex(function (n) { return now < new Date(n.passedBy).getTime(); });
     if (cur < 0) cur = nodes.length - 1;
-    // If the visit is already marked complete, reflect it: treatment is done,
-    // the customer is now in the settle-in period heading toward the revisit.
     if (appt.status === "Completed" && cur < 1) cur = 1;
     else if ((appt.status === "En route" || appt.status === "In progress") && cur > 0) cur = 0;
     var wrap = $("#timeline"); wrap.innerHTML = "";
@@ -262,50 +253,52 @@
     });
   }
 
-  function buildPrepItems(pest) {
-    var items = [];
-    (DATA.prepByPest[pest] || []).forEach(function (t) { items.push({ text: t, group: "For your " + pest.toLowerCase() + " treatment" }); });
-    DATA.generalPrep.forEach(function (t) { items.push({ text: t, group: "For every visit" }); });
-    return items;
-  }
   function renderPrep(appt) {
     var items = buildPrepItems(appt.pest);
-    var key = prepKey(appt.id);
-    var state; try { state = JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { state = {}; }
+    var state = Object.assign({}, appt.prepDone || {});   // keyed by item text
     var list = $("#prepList"); list.innerHTML = "";
     var lastGroup = null;
     items.forEach(function (it, i) {
       if (it.group !== lastGroup) { list.appendChild(el("div", "prep__tag", it.group)); lastGroup = it.group; }
       var id = "prep_" + i;
       var label = el("label", "prep__item"); label.setAttribute("for", id);
-      label.innerHTML = '<input type="checkbox" id="' + id + '" ' + (state[i] ? "checked" : "") + '>' +
-        '<span class="prep__box">' + IC.check + '</span><span class="prep__text">' + it.text + "</span>";
+      label.innerHTML = '<input type="checkbox" id="' + id + '" ' + (state[it.text] ? "checked" : "") + ' data-text="' + escapeHtml(it.text) + '">' +
+        '<span class="prep__box">' + IC.check + '</span><span class="prep__text">' + escapeHtml(it.text) + "</span>";
       list.appendChild(label);
     });
-    function update() {
+    function paint() {
       var boxes = list.querySelectorAll('input[type=checkbox]'), done = 0;
-      boxes.forEach(function (b, i) { state[i] = b.checked; if (b.checked) done++; });
-      localStorage.setItem(key, JSON.stringify(state));
-      var pct = Math.round((done / boxes.length) * 100);
+      boxes.forEach(function (b) { if (b.checked) done++; });
+      var pct = boxes.length ? Math.round((done / boxes.length) * 100) : 0;
       $("#prepFill").style.width = pct + "%";
       $("#prepCount").textContent = done + "/" + boxes.length;
-      $("#prepDone").classList.toggle("hidden", done !== boxes.length);
+      $("#prepDone").classList.toggle("hidden", !boxes.length || done !== boxes.length);
     }
-    list.addEventListener("change", update);
-    update();
+    var saveTimer = null;
+    list.onchange = function (e) {
+      var cb = e.target;
+      if (!cb || cb.type !== "checkbox") return;
+      state[cb.getAttribute("data-text")] = cb.checked;
+      paint();
+      appt.prepDone = state;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function () { savePrep(appt.id, state); }, 250);
+    };
+    paint();
   }
 
   function renderHistory(customerId) {
     var wrap = $("#historyList"); wrap.innerHTML = "";
-    var list = DATA.history[customerId] || [];
+    var list = (STATE.history[customerId] || []).slice()
+      .sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
     if (!list.length) { wrap.appendChild(el("p", "muted-note", "No past visits yet — your first treatment is coming up.")); return; }
     list.forEach(function (h) {
       var d = new Date(h.date);
       var item = el("div", "history__item");
       item.innerHTML = '<div class="history__date"><strong>' + d.getDate() + "</strong><span>" +
         d.toLocaleDateString("en-US", { month: "short", year: "numeric" }) + "</span></div>" +
-        '<div class="history__body"><h4>' + h.pest + "</h4><p>" + h.result + "</p>" +
-        '<div class="history__meta">' + h.treatmentType + " · " + h.technician + "</div></div>";
+        '<div class="history__body"><h4>' + escapeHtml(h.pest) + "</h4><p>" + escapeHtml(h.result || "Treatment completed.") + "</p>" +
+        '<div class="history__meta">' + escapeHtml(h.treatmentType || "") + (h.technician ? " · " + escapeHtml(h.technician) : "") + "</div></div>";
       wrap.appendChild(item);
     });
   }
@@ -315,16 +308,16 @@
   ================================================================ */
   var STATUS_FLOW = ["Scheduled", "En route", "In progress", "Completed"];
 
-  function renderTechnician(s) {
-    var tech = techById(s.refId);
-    var jobs = getAppointments().filter(function (a) { return a.technicianId === s.refId; })
+  function renderTechnician() {
+    var tech = STATE.me;
+    var jobs = getAppointments().filter(function (a) { return a.technicianId === tech.id; })
       .sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
 
     $("#techWelcome").textContent = "Hi " + tech.firstName + " 👋";
     $("#techSub").textContent = "Here are the jobs assigned to you. Update each one as you go.";
 
     var todayJobs = jobs.filter(function (j) { return isToday(j.start); });
-    var openJobs = jobs.filter(function (j) { return j.status !== "Completed"; });
+    var openJobs = jobs.filter(function (j) { return j.status !== "Completed" && j.status !== "Cancelled"; });
     var nextJob = openJobs[0];
     $("#techStats").innerHTML =
       stat("Jobs today", todayJobs.length, "scheduled") +
@@ -336,10 +329,10 @@
     if (!jobs.length) { wrap.appendChild(el("p", "muted-note", "No jobs assigned to you right now.")); return; }
 
     jobs.forEach(function (j) {
-      var c = customerById(j.customerId);
-      var done = prepDoneFor(j.id), total = prepTotalFor(j.pest);
-      var pct = Math.round((done / total) * 100);
-      var mapUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(c.address);
+      var c = customerById(j.customerId) || { name: "Customer", address: "", phone: "" };
+      var done = prepDoneCount(j), total = prepTotalFor(j.pest);
+      var pct = total ? Math.round((done / total) * 100) : 0;
+      var mapUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(c.address || "");
 
       var card = el("div", "job");
       card.innerHTML =
@@ -349,13 +342,13 @@
           badge(j.status) +
         "</div>" +
         '<div class="job__main">' +
-          "<h3>" + escapeHtml(c.name) + " · " + j.pest + "</h3>" +
-          '<div class="job__row">' + IC.pin + "<span>" + escapeHtml(c.address) + "</span></div>" +
-          '<div class="job__treat">' + IC.flask + " " + j.treatmentType + " — " + j.targets + "</div>" +
+          "<h3>" + escapeHtml(c.name) + " · " + escapeHtml(j.pest) + "</h3>" +
+          '<div class="job__row">' + IC.pin + "<span>" + escapeHtml(c.address || "—") + "</span></div>" +
+          '<div class="job__treat">' + IC.flask + " " + escapeHtml(j.treatmentType || "") + (j.targets ? " — " + escapeHtml(j.targets) : "") + "</div>" +
           '<div class="job__prep"><div class="mini-bar"><div class="mini-bar__fill" style="width:' + pct + '%"></div></div>' +
             "<span>Customer prep " + done + "/" + total + "</span></div>" +
           '<div class="job__links">' +
-            '<a class="mini-btn" href="tel:' + c.phone.replace(/[^0-9+]/g, "") + '">' + IC.phone + " Call</a>" +
+            (c.phone ? '<a class="mini-btn" href="tel:' + String(c.phone).replace(/[^0-9+]/g, "") + '">' + IC.phone + " Call</a>" : "") +
             '<a class="mini-btn" href="' + mapUrl + '" target="_blank" rel="noopener">' + IC.map + " Directions</a>" +
           "</div>" +
           '<label class="job__note-label">Visit notes' +
@@ -366,49 +359,28 @@
       wrap.appendChild(card);
     });
 
-    // wire note saving
     wrap.querySelectorAll(".job__note").forEach(function (ta) {
-      ta.addEventListener("change", function () {
-        saveOverride(ta.getAttribute("data-id"), { notes: ta.value });
-        toast("Note saved");
-      });
+      ta.addEventListener("change", function () { saveNotes(ta.getAttribute("data-id"), ta.value); });
     });
-    // wire action buttons
     wrap.querySelectorAll("[data-action]").forEach(function (b) {
       b.addEventListener("click", function () {
-        var id = b.getAttribute("data-id"), action = b.getAttribute("data-action");
-        advanceJob(id, action);
-        renderTechnician(s);
+        b.disabled = true;
+        advanceJob(b.getAttribute("data-id"), b.getAttribute("data-action"));
       });
     });
   }
 
   function techActions(j) {
     if (j.status === "Completed") {
-      return '<div class="job__done">✅ Completed<br><small>Revisit ' + fmtDateShort(j.revisit) + "</small></div>";
+      return '<div class="job__done">✅ Completed' + (j.revisit ? "<br><small>Revisit " + fmtDateShort(j.revisit) + "</small>" : "") + "</div>";
     }
+    if (j.status === "Unassigned") { return '<div class="job__done"><small>Waiting on scheduling</small></div>'; }
     var idx = STATUS_FLOW.indexOf(j.status);
     var next = STATUS_FLOW[idx + 1] || "Completed";
     var label = { "En route": "Mark en route", "In progress": "Start visit", "Completed": "Complete visit" }[next];
     var btns = '<button class="btn btn--primary btn--sm" data-id="' + j.id + '" data-action="' + next + '">' + label + "</button>";
-    if (next === "En route") {
-      btns += '<button class="btn btn--ghost btn--sm" data-id="' + j.id + '" data-action="In progress">Start visit</button>';
-    }
+    if (next === "En route") btns += '<button class="btn btn--ghost btn--sm" data-id="' + j.id + '" data-action="In progress">Start visit</button>';
     return btns;
-  }
-
-  function advanceJob(id, newStatus) {
-    var patch = { status: newStatus };
-    if (newStatus === "Completed") {
-      var appt = getAppointments().filter(function (a) { return a.id === id; })[0];
-      // ensure a revisit is booked ~2 weeks out if one isn't already in the future
-      if (!appt.revisit || daysBetween(appt.revisit) < 0) patch.revisit = addDaysISO(new Date().toISOString(), 14);
-      patch.completedAt = new Date().toISOString();
-      toast("Visit completed — revisit booked 🎉");
-    } else {
-      toast("Status updated: " + newStatus);
-    }
-    saveOverride(id, patch);
   }
 
   function stat(label, value, mod) {
@@ -419,32 +391,31 @@
      ADMIN DASHBOARD
   ================================================================ */
   function renderAdmin() {
-    var appts = getAppointments().sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
+    var appts = getAppointments().slice().sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
 
     var todayCount = appts.filter(function (a) { return isToday(a.start); }).length;
     var weekCount = appts.filter(function (a) { var d = daysBetween(a.start); return d >= 0 && d <= 7; }).length;
-    var unassigned = appts.filter(function (a) { return !a.technicianId; }).length;
+    var unassigned = appts.filter(function (a) { return !a.technicianId && a.status !== "Completed" && a.status !== "Cancelled"; }).length;
     $("#adminStats").innerHTML =
       stat("Jobs today", todayCount, "scheduled") +
       stat("Next 7 days", weekCount, "route") +
-      stat("Active customers", DATA.customers.length, "progress") +
+      stat("Active customers", STATE.customers.length, "progress") +
       stat("Needs assignment", unassigned, unassigned ? "unassigned" : "done");
 
-    // Appointments table
+    renderAdminTools();
+
     var techOpts = function (sel) {
       var opts = '<option value="">Unassigned</option>';
-      DATA.technicians.forEach(function (t) {
-        opts += '<option value="' + t.id + '"' + (t.id === sel ? " selected" : "") + ">" + t.name + "</option>";
-      });
+      STATE.technicians.forEach(function (t) { opts += '<option value="' + t.id + '"' + (t.id === sel ? " selected" : "") + ">" + escapeHtml(t.name) + "</option>"; });
       return opts;
     };
     var rows = '<div class="appt-row appt-row--head"><div>When</div><div>Customer</div><div>Service</div><div>Technician</div><div>Status</div></div>';
     appts.forEach(function (a) {
-      var c = customerById(a.customerId);
+      var c = customerById(a.customerId) || { name: "—", address: "" };
       rows += '<div class="appt-row' + (a.technicianId ? "" : " appt-row--alert") + '">' +
         '<div data-label="When"><strong>' + fmtDateShort(a.start) + "</strong><small>" + fmtTime(a.start) + " · " + relDays(a.start) + "</small></div>" +
         '<div data-label="Customer"><strong>' + escapeHtml(c.name) + "</strong><small>" + escapeHtml(cityOf(c.address)) + "</small></div>" +
-        '<div data-label="Service">' + a.pest + "<small>" + a.treatmentType + "</small></div>" +
+        '<div data-label="Service">' + escapeHtml(a.pest) + "<small>" + escapeHtml(a.treatmentType || "") + "</small></div>" +
         '<div data-label="Technician"><select class="tech-select" data-id="' + a.id + '">' + techOpts(a.technicianId) + "</select></div>" +
         '<div data-label="Status">' + badge(a.status) + "</div>" +
         "</div>";
@@ -452,39 +423,110 @@
     $("#adminAppts").innerHTML = rows;
 
     $("#adminAppts").querySelectorAll(".tech-select").forEach(function (sel) {
-      sel.addEventListener("change", function () {
-        var id = sel.getAttribute("data-id"), techId = sel.value || null;
-        var appt = getAppointments().filter(function (a) { return a.id === id; })[0];
-        var patch = { technicianId: techId };
-        // assigning a tech to an unassigned job moves it to Scheduled; unassigning reverts
-        if (techId && appt.status === "Unassigned") patch.status = "Scheduled";
-        if (!techId) patch.status = "Unassigned";
-        saveOverride(id, patch);
-        toast(techId ? "Assigned to " + techById(techId).firstName : "Set to unassigned");
-        renderAdmin();
-      });
+      sel.addEventListener("change", function () { assignTech(sel.getAttribute("data-id"), sel.value || null); });
     });
 
-    // Technicians list
     var techHtml = "";
-    DATA.technicians.forEach(function (t) {
-      var count = appts.filter(function (a) { return a.technicianId === t.id && a.status !== "Completed"; }).length;
+    if (!STATE.technicians.length) techHtml = '<p class="muted-note">No technicians yet. Add one with “Add a person” above.</p>';
+    STATE.technicians.forEach(function (t) {
+      var count = appts.filter(function (a) { return a.technicianId === t.id && a.status !== "Completed" && a.status !== "Cancelled"; }).length;
       techHtml += '<div class="tech-item"><span class="avatar avatar--sm">' + t.initials + "</span>" +
-        '<div class="tech-item__info"><strong>' + t.name + "</strong><small>" + IC.phone + " " + t.phone + "</small></div>" +
+        '<div class="tech-item__info"><strong>' + escapeHtml(t.name) + "</strong><small>" + IC.phone + " " + escapeHtml(t.phone || "—") + "</small></div>" +
         '<span class="tech-item__count">' + count + " open job" + (count === 1 ? "" : "s") + "</span></div>";
     });
     $("#adminTechs").innerHTML = techHtml;
   }
-  function cityOf(addr) { var parts = addr.split(","); return parts.length > 1 ? parts[1].trim() : addr; }
+  function cityOf(addr) { if (!addr) return ""; var parts = String(addr).split(","); return parts.length > 1 ? parts[1].trim() : addr; }
+
+  /* ---- Admin tools: new appointment + add a person (injected once) ---- */
+  function renderAdminTools() {
+    var host = $("#adminTools");
+    if (!host) {
+      host = el("div"); host.id = "adminTools";
+      var stats = $("#adminStats");
+      stats.parentNode.insertBefore(host, stats.nextSibling);
+    }
+    var custOpts = STATE.customers.map(function (c) { return '<option value="' + c.id + '">' + escapeHtml(c.name) + "</option>"; }).join("");
+    var canAddPeople = MODE === "real" && CFG.manageAccountUrl;
+
+    host.innerHTML =
+      '<div class="admin-tools">' +
+        '<details class="card admin-tool"><summary>＋ New appointment</summary>' +
+          '<form id="newApptForm" class="admin-form">' +
+            '<div class="admin-form__grid">' +
+              '<label class="field"><span>Customer</span><select name="customer" required>' + (custOpts || '<option value="">No customers yet</option>') + '</select></label>' +
+              '<label class="field"><span>Pest</span><input name="pest" required placeholder="Cockroaches" /></label>' +
+              '<label class="field"><span>Treatment</span><input name="treatment" placeholder="Gel Bait + Crack &amp; Crevice" /></label>' +
+              '<label class="field"><span>Focus area</span><input name="targets" placeholder="kitchen and bathroom" /></label>' +
+              '<label class="field"><span>Date</span><input name="date" type="date" required /></label>' +
+              '<label class="field"><span>Time</span><input name="time" type="time" required value="09:00" /></label>' +
+              '<label class="field"><span>Duration (min)</span><input name="duration" type="number" min="15" step="15" value="90" /></label>' +
+              '<label class="field"><span>Re-entry (hours)</span><input name="reentry" type="number" min="0" value="4" /></label>' +
+            "</div>" +
+            '<label class="field"><span>Notes</span><textarea name="notes" rows="2" placeholder="Anything the technician should know"></textarea></label>' +
+            '<button class="btn btn--primary" type="submit">Create appointment</button>' +
+          "</form>" +
+        "</details>" +
+        '<details class="card admin-tool"><summary>＋ Add a person</summary>' +
+          (canAddPeople ?
+            '<form id="addPersonForm" class="admin-form">' +
+              '<div class="admin-form__grid">' +
+                '<label class="field"><span>Role</span><select name="role"><option value="customer">Customer</option><option value="technician">Technician</option></select></label>' +
+                '<label class="field"><span>Full name</span><input name="full_name" required placeholder="Jane Doe" /></label>' +
+                '<label class="field"><span>Email</span><input name="email" type="email" required placeholder="jane@example.com" /></label>' +
+                '<label class="field"><span>Phone</span><input name="phone" placeholder="416-555-0199" /></label>' +
+                '<label class="field"><span>Address (customers)</span><input name="address" placeholder="123 Maple Ave, Toronto" /></label>' +
+                '<label class="field"><span>Plan (customers)</span><input name="plan" placeholder="Quarterly Protection Plan" /></label>' +
+              "</div>" +
+              '<button class="btn btn--primary" type="submit">Create login &amp; email an invite</button>' +
+              '<p class="muted-note">They get an email to set their password and sign in.</p>' +
+            "</form>"
+            :
+            '<p class="muted-note">To add customer or technician logins from here, deploy the optional <code>manage-account</code> Edge Function and set <code>manageAccountUrl</code> in <code>js/supabase-config.js</code> (see PORTAL-SETUP.md). Until then, add users under <b>Authentication → Users</b> in your Supabase dashboard.</p>'
+          ) +
+        "</details>" +
+      "</div>";
+
+    var apForm = $("#newApptForm");
+    if (apForm) apForm.addEventListener("submit", onCreateAppointment);
+    var ppForm = $("#addPersonForm");
+    if (ppForm) ppForm.addEventListener("submit", onAddPerson);
+  }
+
+  function onCreateAppointment(e) {
+    e.preventDefault();
+    var f = e.target;
+    var date = f.date.value, time = f.time.value;
+    if (!f.customer.value || !date || !time) { toast("Please fill the required fields"); return; }
+    var start = new Date(date + "T" + time);
+    var dur = parseInt(f.duration.value, 10) || 90;
+    var end = new Date(start.getTime() + dur * 60000);
+    var btn = f.querySelector("button[type=submit]"); btn.disabled = true;
+    createAppointment({
+      p_customer: f.customer.value, p_pest: f.pest.value.trim(), p_treatment: f.treatment.value.trim(),
+      p_targets: f.targets.value.trim(), p_starts_at: start.toISOString(), p_ends_at: end.toISOString(),
+      p_re_entry_hours: parseInt(f.reentry.value, 10) || 0, p_coverage_ends: null, p_notes: f.notes.value.trim()
+    }, function () { btn.disabled = false; });
+  }
+
+  function onAddPerson(e) {
+    e.preventDefault();
+    var f = e.target;
+    var btn = f.querySelector("button[type=submit]"); btn.disabled = true;
+    addPerson({
+      role: f.role.value, full_name: f.full_name.value.trim(), email: f.email.value.trim(),
+      phone: f.phone.value.trim(), address: f.address.value.trim(), plan: f.plan.value.trim()
+    }, function () { btn.disabled = false; });
+  }
 
   /* ---------- Add-to-calendar (.ics) ---------- */
   function downloadICS(appt, c) {
     function z(iso) { return new Date(iso).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"; }
     var ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Serene Touch//Portal//EN", "BEGIN:VEVENT",
-      "UID:" + Date.now() + "@serenetouch", "DTSTAMP:" + z(new Date().toISOString()),
+      "UID:" + appt.id + "@serenetouch", "DTSTAMP:" + z(new Date().toISOString()),
       "DTSTART:" + z(appt.start), "DTEND:" + z(appt.end),
-      "SUMMARY:Serene Touch Pest Control — " + appt.treatmentType,
-      "DESCRIPTION:" + (appt.notes || ""), "LOCATION:" + c.address, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+      "SUMMARY:Serene Touch Pest Control — " + (appt.treatmentType || appt.pest),
+      "DESCRIPTION:" + (appt.notes || ""), "LOCATION:" + (c.address || ""), "END:VEVENT", "END:VCALENDAR"].join("\r\n");
     var a = el("a");
     a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
     a.download = "serene-touch-appointment.ics";
@@ -496,7 +538,7 @@
   var toastTimer;
   function toast(msg) {
     var t = $("#toast"); t.textContent = msg; t.classList.add("is-show");
-    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("is-show"); }, 2600);
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("is-show"); }, 2800);
   }
 
   /* ================================================================
@@ -504,7 +546,7 @@
   ================================================================ */
   var assistantReady = false;
   function initAssistant() {
-    if (assistantReady) return;
+    if (assistantReady || !ASSIST_APPT) return;
     assistantReady = true;
     var launcher = $("#assistantLauncher"), panel = $("#assistant"), closeBtn = $("#assistantClose");
     var body = $("#assistantBody"), input = $("#assistantInput"), sendBtn = $("#assistantSend"), chipsWrap = $("#assistantChips");
@@ -519,7 +561,7 @@
 
     function addMsg(text, who) { var m = el("div", "msg msg--" + who, text); body.appendChild(m); body.scrollTop = body.scrollHeight; return m; }
     function renderChips() { chipsWrap.innerHTML = ""; QUICK.forEach(function (q) { var b = el("button", "chip", q); b.addEventListener("click", function () { handle(q); }); chipsWrap.appendChild(b); }); }
-    function greet() { addMsg("Hi " + ASSIST_CUSTOMER.firstName + "! 👋 I'm your Serene Touch assistant. I can see your account, so ask me anything about your <b>" + ASSIST_APPT.pest.toLowerCase() + " treatment</b>, your appointment, how to prepare, or what to expect.", "bot"); renderChips(); }
+    function greet() { addMsg("Hi " + escapeHtml(ASSIST_CUSTOMER.firstName) + "! 👋 I'm your Serene Touch assistant. I can see your account, so ask me anything about your <b>" + escapeHtml(ASSIST_APPT.pest.toLowerCase()) + " treatment</b>, your appointment, how to prepare, or what to expect.", "bot"); renderChips(); }
     function thinking(cb) { var t = el("div", "msg msg--bot", '<span class="typing"><span></span><span></span><span></span></span>'); body.appendChild(t); body.scrollTop = body.scrollHeight; setTimeout(function () { t.remove(); cb(); }, 460); }
     function handle(text) { addMsg(escapeHtml(text), "user"); thinking(function () { addMsg(respond(text), "bot"); renderChips(); }); }
 
@@ -531,36 +573,42 @@
   function respond(raw) {
     var q = raw.toLowerCase();
     var s = ASSIST_APPT, c = ASSIST_CUSTOMER;
-    var tech = s.technicianId ? techById(s.technicianId) : null;
+    var tName = techNameFor(s);
     var has = function () { for (var i = 0; i < arguments.length; i++) if (q.indexOf(arguments[i]) > -1) return true; return false; };
+    // escaped copies of user-controlled fields (these get embedded into HTML replies)
+    var pestL = escapeHtml(String(s.pest || "").toLowerCase());
+    var treat = escapeHtml(s.treatmentType || "targeted treatment");
+    var targ = escapeHtml(s.targets || "");
+    var plan = escapeHtml(c.plan || "");
+    var fname = escapeHtml(c.firstName || "");
 
-    if (/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q)) return "Hello! How can I help with your " + s.pest.toLowerCase() + " treatment today?";
+    if (/^(hi|hello|hey|yo|good (morning|afternoon|evening))\b/.test(q)) return "Hello! How can I help with your " + pestL + " treatment today?";
     if (has("reschedule", "cancel", "change my appoint", "can't make", "cannot make", "move my appoint", "different day"))
       return "No problem — to reschedule or cancel, just call or text us at <a href='tel:+14389886709'>438-988-6709</a>. Your visit is currently " + relDays(s.start) + " on " + fmtFullDate(s.start) + ".";
     if (has("revisit", "re-visit", "follow up", "follow-up", "come back", "next visit", "second visit", "again", "check back"))
-      return "Your follow-up (revisit) is on <b>" + fmtFullDate(s.revisit) + "</b> — about two weeks after treatment. That gap lets the treatment work fully; at the revisit we check the results and re-treat free of charge if anything remains.";
+      return s.revisit ? "Your follow-up (revisit) is on <b>" + fmtFullDate(s.revisit) + "</b> — about two weeks after treatment. That gap lets the treatment work fully; at the revisit we check the results and re-treat free of charge if anything remains." : "Your revisit is booked about two weeks after your treatment. You'll see the exact date here once your visit is complete.";
     if (has("who is", "which tech", "technician", "who's coming", "who is coming"))
-      return tech ? "Your technician is <b>" + tech.name + "</b>. They'll handle your " + s.pest.toLowerCase() + " treatment on " + fmtDate(s.start) + "." : "A technician will be assigned to your visit shortly — you'll see their name here once they're scheduled.";
+      return tName ? "Your technician is <b>" + escapeHtml(tName) + "</b>. They'll handle your " + pestL + " treatment on " + fmtDate(s.start) + "." : "A technician will be assigned to your visit shortly — you'll see their name here once they're scheduled.";
     if (has("appointment", "appoint", "coming", "arrive", "when are you", "when is the", "schedule", "what time", "what day"))
-      return "Your next treatment is <b>" + fmtFullDate(s.start) + "</b> from " + fmtTime(s.start) + " to " + fmtTime(s.end) + " (about 90 minutes)" + (tech ? ", with " + tech.name : "") + " — that's " + relDays(s.start) + ". You can tap “Add to calendar” on your appointment card.";
+      return "Your next treatment is <b>" + fmtFullDate(s.start) + "</b> from " + fmtTime(s.start) + " to " + fmtTime(s.end) + " (about 90 minutes)" + (tName ? ", with " + escapeHtml(tName) : "") + " — that's " + relDays(s.start) + ". You can tap “Add to calendar” on your appointment card.";
     if (has("prepare", "prep", "ready", "before you", "before the", "do before", "get ready", "what do i do", "what should i do"))
-      return "Great question! For your " + s.pest.toLowerCase() + " visit, the key steps are: " + previewPrep(s.pest) + " You'll find the full, tickable checklist in the <b>How to Prepare</b> card — it saves your progress as you go.";
+      return "Great question! For your " + pestL + " visit, the key steps are: " + previewPrep(s.pest) + " You'll find the full, tickable checklist in the <b>How to Prepare</b> card — it saves your progress as you go.";
     if (has("safe", "pet", "dog", "cat", "fish", "kid", "child", "baby", "pregnan", "toxic", "harmful", "danger"))
       return "Our products are eco-friendly, low-toxic, and family &amp; pet safe. ✅ Just keep children and pets out of treated areas for about <b>" + s.reEntryHours + " hours</b> after the visit, then open a few windows to ventilate. If you have a fish tank, cover it and turn off the air pump during treatment.";
     if (has("treatment", "using", "product", "chemical", "spray", "method", "what kind", "how do you treat"))
-      return "For your " + s.pest.toLowerCase() + ", we're using a <b>" + s.treatmentType + "</b>, focused mainly on your " + s.targets + ". It targets pests at the source while staying safe for your home.";
+      return "For your " + pestL + ", we're using a <b>" + treat + "</b>" + (s.targets ? ", focused mainly on your " + targ : "") + ". It targets pests at the source while staying safe for your home.";
     if (has("plan", "coverage", "cover", "guarantee", "warranty", "expire", "protected until", "how long am i", "when does my plan", "end"))
-      return "You're on the <b>" + c.plan + "</b>, with coverage through <b>" + fmtDate(s.coverageEnds) + "</b>. While you're covered, if pests come back between visits we return and re-treat at no extra cost.";
+      return "You're on the <b>" + plan + "</b>" + (s.coverageEnds ? ", with coverage through <b>" + fmtDate(s.coverageEnds) + "</b>" : "") + ". While you're covered, if pests come back between visits we return and re-treat at no extra cost.";
     if (has("how long", "duration", "take", "last", "long will", "long does"))
       return "The treatment visit takes about <b>90 minutes</b> (" + fmtTime(s.start) + "–" + fmtTime(s.end) + "). After that, the treatment keeps working over the next 1–2 weeks until your revisit.";
     if (has("still see", "still seeing", "still have", "more bug", "came back", "not working", "didn't work", "dead", "seeing more", "increase"))
-      return DATA.aftercareByPest[s.pest] || "Some activity right after treatment can be normal. If it continues past your revisit on " + fmtDate(s.revisit) + ", call us at 438-988-6709 and we'll come back.";
+      return DATA.aftercareByPest[s.pest] || ("Some activity right after treatment can be normal." + (s.revisit ? " If it continues past your revisit on " + fmtDate(s.revisit) + ", call us at 438-988-6709 and we'll come back." : " If it continues, call us at 438-988-6709 and we'll come back."));
     if (has("cost", "price", "pay", "invoice", "bill", "charge", "how much", "fee"))
-      return "Billing for your " + c.plan + " follows your service agreement. For an invoice or any billing question, call us at <a href='tel:+14389886709'>438-988-6709</a> and we'll sort it out right away.";
+      return "Billing for your " + plan + " follows your service agreement. For an invoice or any billing question, call us at <a href='tel:+14389886709'>438-988-6709</a> and we'll sort it out right away.";
     if (has("human", "person", "call", "phone", "speak", "representative", "agent", "contact", "talk to"))
       return "You can reach the Serene Touch team at <a href='tel:+14389886709'>438-988-6709</a> or <a href='mailto:info@serenetouchpest.ca'>info@serenetouchpest.ca</a> — Mon–Sat, 8am–7pm.";
-    if (has("thank", "thx", "appreciate", "great", "awesome", "perfect")) return "You're very welcome, " + c.firstName + "! 🐾 Anything else I can help with?";
-    if (has("address", "where", "location", "my place", "my home")) return "We have your service address as <b>" + escapeHtml(c.address) + "</b>. If that's not right, let us know at 438-988-6709.";
+    if (has("thank", "thx", "appreciate", "great", "awesome", "perfect")) return "You're very welcome, " + fname + "! 🐾 Anything else I can help with?";
+    if (has("address", "where", "location", "my place", "my home")) return "We have your service address as <b>" + escapeHtml(c.address || "the address on file") + "</b>. If that's not right, let us know at 438-988-6709.";
     return "I can help with your <b>appointment</b>, how to <b>prepare</b>, your <b>treatment</b>, your <b>revisit</b>, plan coverage, and safety. Try a quick question below — or for anything else, call us at <a href='tel:+14389886709'>438-988-6709</a>.";
   }
   function previewPrep(pest) {
@@ -569,7 +617,297 @@
   }
 
   /* ================================================================
+     WRITE ACTIONS  (dispatch real RPC vs demo localStorage)
+  ================================================================ */
+  function advanceJob(id, status) {
+    if (MODE === "real") {
+      sb.rpc("advance_status", { p_appt: id, p_status: status }).then(function (r) {
+        if (r.error) { toast(r.error.message || "Update failed"); renderTechnician(); return; }
+        toast(status === "Completed" ? "Visit completed — revisit booked 🎉" : "Status updated: " + status);
+        reloadThenRender();
+      });
+    } else { demoAdvance(id, status); renderTechnician(); }
+  }
+  function saveNotes(id, notes) {
+    if (MODE === "real") {
+      sb.rpc("save_notes", { p_appt: id, p_notes: notes }).then(function (r) { toast(r.error ? (r.error.message || "Save failed") : "Note saved"); });
+    } else { demoPatch(id, { notes: notes }); toast("Note saved"); }
+  }
+  function savePrep(id, prep) {
+    if (MODE === "real") { sb.rpc("set_prep", { p_appt: id, p_prep: prep }).then(function (r) { if (r.error) toast("Couldn't save prep"); }); }
+    else { demoPatch(id, { prepDone: prep }); }
+  }
+  function assignTech(id, techId) {
+    if (MODE === "real") {
+      sb.rpc("assign_tech", { p_appt: id, p_tech: techId }).then(function (r) {
+        if (r.error) { toast(r.error.message || "Assign failed"); renderAdmin(); return; }
+        toast(techId ? "Assigned to " + firstWord((techById(techId) || {}).name) : "Set to unassigned");
+        reloadThenRender();
+      });
+    } else {
+      var patch = { technicianId: techId, technicianName: techId ? (techById(techId) || {}).name : null };
+      var appt = getAppointments().filter(function (a) { return a.id === id; })[0];
+      if (techId && appt.status === "Unassigned") patch.status = "Scheduled";
+      if (!techId) patch.status = "Unassigned";
+      demoPatch(id, patch); toast(techId ? "Assigned" : "Set to unassigned"); renderAdmin();
+    }
+  }
+  function createAppointment(args, done) {
+    if (MODE === "real") {
+      sb.rpc("create_appointment", args).then(function (r) {
+        done && done();
+        if (r.error) { toast(r.error.message || "Could not create"); return; }
+        toast("Appointment created ✅");
+        reloadThenRender();
+      });
+    } else {
+      var c = customerById(args.p_customer) || STATE.customers[0];
+      var id = "A" + (Date.now());
+      STATE.appointments.push({ id: id, customerId: args.p_customer, technicianId: null, technicianName: null, pest: args.p_pest, treatmentType: args.p_treatment, targets: args.p_targets, start: args.p_starts_at, end: args.p_ends_at, status: "Unassigned", revisit: null, coverageEnds: null, reEntryHours: args.p_re_entry_hours, notes: args.p_notes, prepDone: {} });
+      done && done(); toast("Appointment created (demo)"); renderAdmin();
+    }
+  }
+  function addPerson(payload, done) {
+    if (MODE !== "real" || !CFG.manageAccountUrl) { done && done(); toast("Connect Supabase + the manage-account function to add people"); return; }
+    sb.auth.getSession().then(function (res) {
+      var token = res.data.session ? res.data.session.access_token : "";
+      fetch(CFG.manageAccountUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (out) {
+          done && done();
+          if (!out.ok) { toast(out.j.error || "Could not create login"); return; }
+          toast("Login created — invite emailed ✅");
+          reloadThenRender();
+        }).catch(function () { done && done(); toast("Network error"); });
+    });
+  }
+
+  /* ---- demo persistence (localStorage), only in demo mode ---- */
+  var DEMO_KEY = "serene_portal_demo_overrides";
+  function demoLoad() { try { return JSON.parse(localStorage.getItem(DEMO_KEY)) || {}; } catch (e) { return {}; } }
+  function demoPatch(id, patch) {
+    var o = demoLoad(); o[id] = Object.assign({}, o[id], patch); localStorage.setItem(DEMO_KEY, JSON.stringify(o));
+    var a = getAppointments().filter(function (x) { return x.id === id; })[0]; if (a) Object.assign(a, patch);
+  }
+  function demoAdvance(id, status) {
+    var patch = { status: status };
+    if (status === "Completed") { patch.revisit = addDaysISO(new Date().toISOString(), 14); }
+    demoPatch(id, patch);
+  }
+
+  /* ================================================================
+     DATA LOADING (real mode)
+  ================================================================ */
+  function buildHistoryFromAppointments() {
+    STATE.history = {};
+    getAppointments().forEach(function (a) {
+      if (a.status === "Completed" || new Date(a.start) < startOfDay(new Date())) {
+        (STATE.history[a.customerId] = STATE.history[a.customerId] || []).push({
+          date: a.start, pest: a.pest, treatmentType: a.treatmentType, technician: a.technicianName, result: a.result
+        });
+      }
+    });
+  }
+
+  function loadForSession(user) {
+    return sb.from("profiles").select("*").eq("id", user.id).single().then(function (meRes) {
+      if (meRes.error || !meRes.data) throw new Error("Your profile isn't set up yet. Please contact the office.");
+      STATE.me = mapProfile(meRes.data);
+      STATE.role = meRes.data.role;
+
+      if (STATE.role === "customer") {
+        STATE.customers = [STATE.me];
+        return sb.from("appointments").select("*").eq("customer_id", user.id).order("starts_at").then(function (ar) {
+          STATE.appointments = (ar.data || []).map(mapAppt);
+          buildHistoryFromAppointments();
+        });
+      }
+      if (STATE.role === "technician") {
+        return sb.from("appointments").select("*").eq("technician_id", user.id).order("starts_at").then(function (ar) {
+          STATE.appointments = (ar.data || []).map(mapAppt);
+          var ids = uniq(STATE.appointments.map(function (a) { return a.customerId; }));
+          if (!ids.length) { STATE.customers = []; return; }
+          return sb.from("profiles").select("*").in("id", ids).then(function (cr) {
+            STATE.customers = (cr.data || []).map(mapProfile);
+          });
+        });
+      }
+      // admin
+      return sb.from("profiles").select("*").then(function (pr) {
+        var profs = pr.data || [];
+        STATE.customers = profs.filter(function (p) { return p.role === "customer"; }).map(mapProfile);
+        STATE.technicians = profs.filter(function (p) { return p.role === "technician"; }).map(mapProfile);
+        return sb.from("appointments").select("*").order("starts_at").then(function (ar) {
+          STATE.appointments = (ar.data || []).map(mapAppt);
+        });
+      });
+    });
+  }
+
+  function reloadThenRender() {
+    if (MODE !== "real" || !currentUserId) { rerenderCurrent(); return; }
+    loadForSession({ id: currentUserId }).then(rerenderCurrent).catch(function (e) { toast(e.message || "Reload failed"); });
+  }
+  function rerenderCurrent() {
+    if (STATE.role === "customer") renderCustomer();
+    else if (STATE.role === "technician") renderTechnician();
+    else if (STATE.role === "admin") renderAdmin();
+  }
+
+  /* ================================================================
+     AUTH (real mode)
+  ================================================================ */
+  function setMsg(text, isErr) {
+    var e = $("#loginError");
+    if (e) { e.textContent = text || ""; e.style.color = isErr ? "" : "var(--green, #16a34a)"; }
+  }
+
+  function wireRealAuth() {
+    // Hide demo-only UI
+    document.querySelectorAll(".demo-flag").forEach(function (n) { n.style.display = "none"; });
+    var demoBox = $(".login__demo"); if (demoBox) demoBox.style.display = "none";
+
+    // Add a "magic link" option + repurpose "forgot password"
+    var form = $("#loginForm");
+    var magic = el("button", "btn btn--ghost btn--block", "Email me a sign-in link");
+    magic.type = "button"; magic.style.marginTop = "10px";
+    form.appendChild(magic);
+    magic.addEventListener("click", function () {
+      var email = ($("#loginEmail").value || "").trim().toLowerCase();
+      if (!email) { setMsg("Enter your email first, then tap the link button.", true); return; }
+      magic.disabled = true;
+      sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } })
+        .then(function (r) { magic.disabled = false; setMsg(r.error ? r.error.message : "Check your email for a sign-in link ✉️", !!r.error); });
+    });
+
+    var forgot = $(".login__row a");
+    if (forgot) {
+      forgot.setAttribute("href", "#");
+      forgot.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        var email = ($("#loginEmail").value || "").trim().toLowerCase();
+        if (!email) { setMsg("Enter your email, then tap “Forgot password”.", true); return; }
+        sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname })
+          .then(function (r) { setMsg(r.error ? r.error.message : "Password reset link sent ✉️", !!r.error); });
+      });
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var email = ($("#loginEmail").value || "").trim().toLowerCase();
+      var pass = $("#loginPassword").value || "";
+      setMsg("Signing in…");
+      sb.auth.signInWithPassword({ email: email, password: pass }).then(function (r) {
+        if (r.error) setMsg(r.error.message, true);
+        // success handled by onAuthStateChange
+      });
+    });
+
+    var soBtn = $("#signOutBtn");
+    if (soBtn) soBtn.addEventListener("click", function () { sb.auth.signOut(); });
+  }
+
+  function onSession(session) {
+    if (!session || !session.user) { currentUserId = null; showLogin(); return; }
+    if (session.user.id === currentUserId) return;   // already loaded
+    currentUserId = session.user.id;
+    setMsg("Loading your dashboard…");
+    loadForSession(session.user).then(function () {
+      setMsg("");
+      routeTo(STATE.role);
+    }).catch(function (e) {
+      setMsg(e.message || "Could not load your account.", true);
+      showLogin();
+    });
+  }
+
+  function maybePasswordRecovery() {
+    sb.auth.onAuthStateChange(function (event, session) {
+      if (event === "PASSWORD_RECOVERY") {
+        var pw = window.prompt("Set a new password (at least 6 characters):");
+        if (pw) sb.auth.updateUser({ password: pw }).then(function (r) { alert(r.error ? r.error.message : "Password updated — you're signed in."); });
+      } else {
+        onSession(session);
+      }
+    });
+  }
+
+  /* ================================================================
+     DEMO MODE
+  ================================================================ */
+  function loadDemoState(role) {
+    STATE.role = role;
+    STATE.technicians = DATA.technicians.map(function (t) { return { id: t.id, name: t.name, firstName: t.firstName, initials: t.initials, phone: t.phone }; });
+    STATE.customers = DATA.customers.map(function (c) { return { id: c.id, name: c.name, firstName: c.firstName, email: c.email, phone: c.phone, address: c.address, plan: c.plan, initials: initials(c.name) }; });
+    var o = demoLoad();
+    STATE.appointments = DATA.appointments.map(function (a) {
+      var prep = {};
+      return Object.assign({
+        id: a.id, customerId: a.customerId, technicianId: a.technicianId,
+        technicianName: a.technicianId ? (DATA.technicians.filter(function (t) { return t.id === a.technicianId; })[0] || {}).name : null,
+        pest: a.pest, treatmentType: a.treatmentType, targets: a.targets, start: a.start, end: a.end,
+        status: a.status, revisit: a.revisit, coverageEnds: a.coverageEnds, reEntryHours: a.reEntryHours, notes: a.notes, prepDone: prep
+      }, o[a.id] || {});
+    });
+    STATE.history = DATA.history;
+    if (role === "customer") STATE.me = STATE.customers.filter(function (c) { return c.id === "C1"; })[0];
+    else if (role === "technician") { var t = STATE.technicians.filter(function (x) { return x.id === "T1"; })[0]; STATE.me = { id: t.id, name: t.name, firstName: t.firstName, initials: t.initials }; }
+    else STATE.me = { id: "A1", name: "Operations Admin", firstName: "Admin", initials: "AD", plan: "" };
+  }
+
+  function wireDemo() {
+    var form = $("#loginForm");
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var email = ($("#loginEmail").value || "").trim().toLowerCase();
+      var pass = $("#loginPassword").value || "";
+      var acct = DATA.accounts.filter(function (a) { return a.email === email && a.password === pass; })[0];
+      if (acct) { setMsg(""); loadDemoState(acct.role); routeTo(acct.role); }
+      else { setMsg("Incorrect email or password. Try a demo dashboard below.", true); }
+    });
+    document.querySelectorAll(".role-demo").forEach(function (btn) {
+      btn.addEventListener("click", function () { var role = btn.getAttribute("data-role"); loadDemoState(role); routeTo(role); });
+    });
+    var soBtn = $("#signOutBtn");
+    if (soBtn) soBtn.addEventListener("click", function () { currentUserId = null; showLogin(); });
+  }
+
+  /* ================================================================
+     SETUP MODE (no keys yet)
+  ================================================================ */
+  function showSetup() {
+    var card = $(".login__card");
+    card.innerHTML =
+      '<a href="index.html" class="logo login__logo"><span class="logo__mark">S</span>' +
+      '<span class="logo__text"><span class="logo__name">SERENE TOUCH</span><span class="logo__sub">PEST CONTROL SERVICES</span></span></a>' +
+      '<h1 class="login__title">Portal not connected yet</h1>' +
+      '<p class="login__sub">To switch on real, secure logins for customers, technicians, and admins, connect a free Supabase project.</p>' +
+      '<ol style="text-align:left;line-height:1.7;margin:18px 0;padding-left:20px;color:#475569">' +
+      '<li>Create a project at <b>supabase.com</b></li>' +
+      '<li>Run <code>supabase/schema.sql</code> then <code>supabase/policies.sql</code></li>' +
+      '<li>Paste your URL + anon key into <code>js/supabase-config.js</code></li>' +
+      "</ol>" +
+      '<p class="login__sub">Full guide: <b>PORTAL-SETUP.md</b></p>' +
+      '<a class="btn btn--primary btn--block" href="?demo=1">Explore the demo instead →</a>' +
+      '<a href="index.html" class="login__back">← Back to website</a>';
+    showLogin();
+  }
+
+  /* ================================================================
      BOOT
   ================================================================ */
-  route();
+  if (MODE === "setup") {
+    showSetup();
+  } else if (MODE === "demo") {
+    wireDemo();
+    showLogin();
+  } else {
+    sb = window.supabase.createClient(CFG.url, CFG.anonKey);
+    wireRealAuth();
+    maybePasswordRecovery();
+    sb.auth.getSession().then(function (r) { onSession(r.data.session); });
+  }
 })();
