@@ -714,7 +714,7 @@
 
   function loadForSession(user) {
     return sb.from("profiles").select("*").eq("id", user.id).single().then(function (meRes) {
-      if (meRes.error || !meRes.data) throw new Error("Your profile isn't set up yet. Please contact the office.");
+      if (meRes.error || !meRes.data) { if (window.console && console.error) console.error("[portal] profile query:", meRes.error); throw new Error("Account profile not found. If you're the owner, re-run supabase/schema.sql, then sign in again."); }
       STATE.me = mapProfile(meRes.data);
       STATE.role = meRes.data.role;
 
@@ -799,39 +799,52 @@
       e.preventDefault();
       var email = ($("#loginEmail").value || "").trim().toLowerCase();
       var pass = $("#loginPassword").value || "";
+      if (!email || !pass) { setMsg("Enter your email and password.", true); return; }
       setMsg("Signing in…");
       sb.auth.signInWithPassword({ email: email, password: pass }).then(function (r) {
-        if (r.error) setMsg(r.error.message, true);
-        // success handled by onAuthStateChange
+        if (r.error) {
+          if (window.console && console.error) console.error("[portal] sign-in error:", r.error);
+          setMsg(r.error.message || "Sign-in failed — check your email and password.", true);
+          return;
+        }
+        if (r.data && r.data.session) enter(r.data.session);   // route immediately on success
+      }).catch(function (err) {
+        if (window.console && console.error) console.error("[portal] sign-in threw:", err);
+        setMsg("Couldn't reach the server. Check your connection and try again.", true);
       });
     });
 
     var soBtn = $("#signOutBtn");
-    if (soBtn) soBtn.addEventListener("click", function () { sb.auth.signOut(); });
+    if (soBtn) soBtn.addEventListener("click", function () { shownFor = null; currentUserId = null; sb.auth.signOut(); });
   }
 
-  function onSession(session) {
-    if (!session || !session.user) { currentUserId = null; showLogin(); return; }
-    if (session.user.id === currentUserId) return;   // already loaded
-    currentUserId = session.user.id;
+  var shownFor = null, loadingFor = null;
+  function enter(session) {
+    if (!session || !session.user) { currentUserId = null; shownFor = null; showLogin(); return; }
+    var uid = session.user.id;
+    if (shownFor === uid || loadingFor === uid) return;   // already showing / loading this user
+    loadingFor = uid; currentUserId = uid;
     setMsg("Loading your dashboard…");
     loadForSession(session.user).then(function () {
-      setMsg("");
-      routeTo(STATE.role);
+      loadingFor = null; shownFor = uid; setMsg(""); routeTo(STATE.role);
     }).catch(function (e) {
-      setMsg(e.message || "Could not load your account.", true);
+      // reset so the user can simply try again (no stranded "Signing in…")
+      loadingFor = null; shownFor = null; currentUserId = null;
+      if (window.console && console.error) console.error("[portal] load failed:", e);
+      setMsg((e && e.message) ? e.message : "Couldn't load your account. Please try again.", true);
       showLogin();
     });
   }
 
-  function maybePasswordRecovery() {
+  function wireAuthEvents() {
     sb.auth.onAuthStateChange(function (event, session) {
       if (event === "PASSWORD_RECOVERY") {
         var pw = window.prompt("Set a new password (at least 6 characters):");
         if (pw) sb.auth.updateUser({ password: pw }).then(function (r) { alert(r.error ? r.error.message : "Password updated — you're signed in."); });
-      } else {
-        onSession(session);
+        return;
       }
+      if (event === "SIGNED_OUT") { currentUserId = null; shownFor = null; showLogin(); return; }
+      if (session) enter(session);   // SIGNED_IN / INITIAL_SESSION / TOKEN_REFRESHED / USER_UPDATED
     });
   }
 
@@ -907,7 +920,7 @@
   } else {
     sb = window.supabase.createClient(CFG.url, CFG.anonKey);
     wireRealAuth();
-    maybePasswordRecovery();
-    sb.auth.getSession().then(function (r) { onSession(r.data.session); });
+    wireAuthEvents();
+    sb.auth.getSession().then(function (r) { if (r.data.session) enter(r.data.session); else showLogin(); });
   }
 })();
