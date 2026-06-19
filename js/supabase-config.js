@@ -15,8 +15,8 @@
    Full setup guide: PORTAL-SETUP.md
 =================================================================== */
 window.SERENE_SUPABASE = {
-  url:     "YOUR_SUPABASE_URL",        // e.g. https://abcdefgh.supabase.co
-  anonKey: "YOUR_SUPABASE_ANON_KEY",   // the long "anon public" key
+  url:     "https://psftpnmlthfqbpnqsvnb.supabase.co",       // Project URL (base only — NOT the /rest/v1/ path)
+  anonKey: "sb_publishable_SbFoKQJVCUZn4oyCrSClfw_SJqE54Wu", // publishable key (browser-safe)
 
   // Optional: only needed if you deploy the admin "manage-account" Edge
   // Function so admins can create customer/technician logins from the portal.
