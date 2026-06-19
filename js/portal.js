@@ -770,8 +770,31 @@
     document.querySelectorAll(".demo-flag").forEach(function (n) { n.style.display = "none"; });
     var demoBox = $(".login__demo"); if (demoBox) demoBox.style.display = "none";
 
-    // Add a "magic link" option + repurpose "forgot password"
     var form = $("#loginForm");
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var mode = "signin";   // "signin" | "signup"
+
+    // --- Continue with Google (only shown once Google is enabled in Supabase) ---
+    var GOOGLE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.85.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59A9 9 0 0 0 .96 4.95L3.97 7.3C4.68 5.17 6.66 3.58 9 3.58z"/></svg>';
+    var oauth = el("div", "login__oauth");
+    oauth.innerHTML = '<div class="login__divider"><span>or</span></div>';
+    var googleBtn = el("button", "btn btn--ghost btn--block login__google", GOOGLE_SVG + "<span>Continue with Google</span>");
+    googleBtn.type = "button";
+    oauth.appendChild(googleBtn);
+    oauth.style.display = "none";   // revealed only if the provider is enabled
+    form.appendChild(oauth);
+    googleBtn.addEventListener("click", function () {
+      setMsg("Redirecting to Google…");
+      sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } })
+        .then(function (r) { if (r.error) setMsg(r.error.message || "Google sign-in isn't available yet.", true); });
+    });
+    // ask the auth server which providers are on, reveal the button if Google is
+    fetch(CFG.url + "/auth/v1/settings", { headers: { apikey: CFG.anonKey } })
+      .then(function (r) { return r.json(); })
+      .then(function (s) { if (s && s.external && s.external.google) oauth.style.display = ""; })
+      .catch(function () {});
+
+    // --- magic link (passwordless sign-in for existing users) ---
     var magic = el("button", "btn btn--ghost btn--block", "Email me a sign-in link");
     magic.type = "button"; magic.style.marginTop = "10px";
     form.appendChild(magic);
@@ -779,10 +802,24 @@
       var email = ($("#loginEmail").value || "").trim().toLowerCase();
       if (!email) { setMsg("Enter your email first, then tap the link button.", true); return; }
       magic.disabled = true;
-      sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } })
+      sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin + location.pathname } })
         .then(function (r) { magic.disabled = false; setMsg(r.error ? r.error.message : "Check your email for a sign-in link ✉️", !!r.error); });
     });
 
+    // --- sign in <-> create account toggle ---
+    var toggle = el("p", "login__toggle");
+    toggle.innerHTML = '<span id="toggleText">New customer?</span> <a href="#" id="toggleLink">Create an account</a>';
+    form.appendChild(toggle);
+    function setMode(m) {
+      mode = m;
+      submitBtn.textContent = (m === "signup") ? "Create account" : "Sign In";
+      $("#toggleText").textContent = (m === "signup") ? "Already have an account?" : "New customer?";
+      $("#toggleLink").textContent = (m === "signup") ? "Sign in instead" : "Create an account";
+      setMsg("");
+    }
+    $("#toggleLink").addEventListener("click", function (ev) { ev.preventDefault(); setMode(mode === "signin" ? "signup" : "signin"); });
+
+    // --- forgot password ---
     var forgot = $(".login__row a");
     if (forgot) {
       forgot.setAttribute("href", "#");
@@ -795,11 +832,28 @@
       });
     }
 
+    // --- submit: sign in OR create account ---
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var email = ($("#loginEmail").value || "").trim().toLowerCase();
       var pass = $("#loginPassword").value || "";
       if (!email || !pass) { setMsg("Enter your email and password.", true); return; }
+
+      if (mode === "signup") {
+        setMsg("Creating your account…");
+        sb.auth.signUp({ email: email, password: pass, options: { emailRedirectTo: location.origin + location.pathname } })
+          .then(function (r) {
+            if (r.error) {
+              if (window.console && console.error) console.error("[portal] sign-up error:", r.error);
+              setMsg(r.error.message || "Couldn't create your account.", true);
+              return;
+            }
+            if (r.data && r.data.session) { enter(r.data.session); }                       // email confirmation off → straight in
+            else { setMsg("Account created — check your email to confirm, then sign in. ✉️", false); setMode("signin"); }
+          });
+        return;
+      }
+
       setMsg("Signing in…");
       sb.auth.signInWithPassword({ email: email, password: pass }).then(function (r) {
         if (r.error) {

@@ -107,11 +107,12 @@ exposed to the browser. It refuses any caller who isn't a signed-in admin.
 These are what make the difference between a demo and a safe production system. The code is
 hardened, but a few Supabase dashboard settings must match:
 
-1. **Turn OFF public sign-ups.** Every account is created by you (an admin), so nobody
-   should be able to self-register. Supabase → **Authentication → Sign In / Providers →
-   Email** → turn **off** *"Allow new users to sign up."*
-   *(Why it matters: with signups on, a stranger could create their own portal account.
-   The code also sends `shouldCreateUser: false`, but set this too — defence in depth.)*
+1. **Customer self-registration (ON).** Customers create their own accounts from the portal
+   (email/password or Google). Supabase → **Authentication → Sign In / Providers → Email** →
+   make sure *"Allow new users to sign up"* is **ON**.
+   *(This is safe: the `handle_new_user` trigger forces every new signup to the **`customer`**
+   role, so nobody can self-register as a technician or admin — those are still created only
+   by you. To enable Google sign-in, see "Customer logins" below.)*
 2. **Set the Site URL + redirect allowlist.** Supabase → **Authentication → URL
    Configuration** → set **Site URL** to `https://serenetouch.ca`, and add
    `https://serenetouch.ca/portal.html` under **Redirect URLs**. This keeps magic-link and
@@ -123,6 +124,27 @@ hardened, but a few Supabase dashboard settings must match:
 4. **Never expose the `service_role` key.** It is only ever used inside the Edge Function on
    Supabase's servers. Do not put it in `js/supabase-config.js` or any committed file — the
    browser only ever gets the **anon** key.
+
+## Customer logins — email + Google
+
+The portal sign-in screen has a **"Create an account"** toggle and (once enabled) a
+**"Continue with Google"** button. New customers from either path get the **`customer`** role.
+
+**Email / password + magic link** work as soon as signups are ON (security step 1) — no setup.
+
+**Google sign-in** needs Google OAuth credentials:
+1. **Google Cloud Console** (<https://console.cloud.google.com>):
+   - Create/select a project → **APIs & Services → OAuth consent screen** → **External** → fill
+     app name + your support email → Save.
+   - **Credentials → Create credentials → OAuth client ID → Web application.**
+   - **Authorized redirect URIs:** add `https://psftpnmlthfqbpnqsvnb.supabase.co/auth/v1/callback`
+     (Supabase also shows this on the Google provider page).
+   - Create, then copy the **Client ID** and **Client secret**.
+2. **Supabase → Authentication → Sign In / Providers → Google** → toggle **Enabled** → paste the
+   **Client ID** + **Client secret** → **Save**.
+
+The "Continue with Google" button appears on the portal automatically once Google is enabled
+(the portal asks Supabase which providers are on).
 
 ---
 

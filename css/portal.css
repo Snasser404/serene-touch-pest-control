@@ -511,3 +511,11 @@ svg { display: block; }
 
 /* Editorial display numbers, to echo the website's Fraunces statistics */
 .stat__value, .history__date strong { font-family: var(--font-display); font-weight: 600; letter-spacing: -.01em; }
+
+/* ---- Login: "or" divider, Google button, create-account toggle ---- */
+.login__divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: var(--muted); font-size: .82rem; }
+.login__divider::before, .login__divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.login__google { gap: 10px; }
+.login__google svg { flex: none; }
+.login__toggle { text-align: center; margin-top: 18px; font-size: .9rem; color: var(--muted); }
+.login__toggle a { color: var(--green-dark); font-weight: 700; }
