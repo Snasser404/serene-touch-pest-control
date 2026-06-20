@@ -1689,10 +1689,12 @@ em { font-style: italic; }
 /* stack the back-to-top button above the chat launcher */
 .to-top { bottom: 86px; }
 @media (max-width: 880px) {
-  .chatw__launch { right: 16px; bottom: 16px; padding: 14px; }
+  /* the site shows a floating call button (.fab, 58px @ bottom:18px) on mobile —
+     stack the chat launcher above it, and the back-to-top above that */
+  .chatw__launch { right: 18px; bottom: 88px; padding: 14px; }
   .chatw__launch span { display: none; }
-  .chatw { right: 10px; left: 10px; bottom: 10px; width: auto; height: min(70vh, 540px); }
-  .to-top { right: 18px; bottom: 86px; }
+  .chatw { right: 10px; left: 10px; bottom: 10px; width: auto; height: min(72vh, 560px); }
+  .to-top { right: 18px; bottom: 148px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .chatw, .chatw__launch { transition: none; }
