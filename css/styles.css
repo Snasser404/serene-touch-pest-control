@@ -1631,3 +1631,69 @@ em { font-style: italic; }
   .marquee { transform: rotate(0) ; margin-top: -12px; }
   .hchip--rating { right: 2%; }
 }
+
+/* ===================== WEBSITE CHAT ASSISTANT ===================== */
+.chatw__launch {
+  position: fixed; right: 22px; bottom: 22px; z-index: 95;
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 13px 19px 13px 16px; border: none; border-radius: 999px; cursor: pointer;
+  font-family: var(--font-body); font-weight: 800; font-size: .95rem; color: #06371c;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  box-shadow: 0 12px 30px rgba(15,138,67,.42);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.chatw__launch:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(15,138,67,.52); }
+.chatw__launch svg { fill: currentColor; flex: none; }
+.chatw__launch.is-hidden { display: none; }
+
+.chatw {
+  position: fixed; right: 22px; bottom: 22px; z-index: 96;
+  width: min(380px, calc(100vw - 32px)); height: min(560px, calc(100vh - 110px));
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0; visibility: hidden; transform: translateY(16px) scale(.98);
+  transition: opacity .22s var(--ease), transform .22s var(--ease), visibility .22s;
+}
+.chatw.is-open { opacity: 1; visibility: visible; transform: none; }
+.chatw__head { display: flex; align-items: center; gap: 11px; padding: 14px 16px; background: var(--ink-950); color: #fff; }
+.chatw__avatar { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--green), var(--green-dark)); color: #fff; font-family: var(--font-display); font-weight: 700; }
+.chatw__id { flex: 1; line-height: 1.2; }
+.chatw__id strong { font-family: var(--font-display); font-size: 1.02rem; display: block; }
+.chatw__id span { font-size: .76rem; color: #bcd2c4; display: flex; align-items: center; gap: 6px; }
+.chatw__dot { width: 7px; height: 7px; border-radius: 50%; background: #46d77f; display: inline-block; }
+.chatw__close { margin-left: auto; background: none; border: none; color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; opacity: .8; padding: 0 2px; }
+.chatw__close:hover { opacity: 1; }
+.chatw__body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.chatw__msg { max-width: 86%; padding: 10px 13px; border-radius: 14px; font-size: .9rem; line-height: 1.5; }
+.chatw__msg--bot { align-self: flex-start; background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; color: var(--ink); }
+.chatw__msg--user { align-self: flex-end; background: linear-gradient(135deg, var(--green), var(--green-dark)); color: #fff; border-bottom-right-radius: 5px; }
+.chatw__msg a { color: var(--green-dark); font-weight: 700; text-decoration: underline; }
+.chatw__msg--user a { color: #fff; }
+.chatw__chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 16px 10px; }
+.chatw__chip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink-900);
+  font-family: var(--font-body); font-weight: 600; font-size: .8rem; cursor: pointer; transition: border-color .15s, color .15s; }
+.chatw__chip:hover { border-color: var(--green); color: var(--green-dark); }
+.chatw__foot { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.chatw__foot input { flex: 1; padding: 11px 15px; border: 1.5px solid var(--line); border-radius: 999px; font: inherit; font-size: .9rem; background: #fff; color: var(--ink); }
+.chatw__foot input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(31,180,92,.14); }
+.chatw__send { flex: none; width: 44px; height: 44px; border: none; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--green), var(--green-dark)); color: #fff; }
+.chatw__send svg { fill: currentColor; }
+.chatw__typing { display: inline-flex; gap: 4px; padding: 2px 0; }
+.chatw__typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: chatwBlink 1s infinite; }
+.chatw__typing span:nth-child(2) { animation-delay: .2s; }
+.chatw__typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes chatwBlink { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+/* stack the back-to-top button above the chat launcher */
+.to-top { bottom: 86px; }
+@media (max-width: 880px) {
+  .chatw__launch { right: 16px; bottom: 16px; padding: 14px; }
+  .chatw__launch span { display: none; }
+  .chatw { right: 10px; left: 10px; bottom: 10px; width: auto; height: min(70vh, 540px); }
+  .to-top { right: 18px; bottom: 86px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chatw, .chatw__launch { transition: none; }
+}
