@@ -313,3 +313,55 @@ grant execute on function public.create_appointment(uuid,text,text,text,timestam
 grant execute on function public.upsert_profile_details(uuid,text,text,text,text,text) to authenticated;
 grant execute on function public.my_role()  to authenticated;
 grant execute on function public.is_admin() to authenticated;
+
+-- ============================================================================
+--  Dashboard upgrade — appointment edit/delete + Realtime  (additive, re-runnable)
+-- ============================================================================
+
+-- Admin edits an existing appointment (reschedule / change service / notes…).
+create or replace function public.update_appointment(
+  p_appt uuid, p_pest text, p_treatment text, p_targets text,
+  p_starts_at timestamptz, p_ends_at timestamptz, p_re_entry_hours int,
+  p_coverage_ends timestamptz, p_revisit timestamptz, p_notes text
+)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not (select public.is_admin()) then raise exception 'Admin only'; end if;
+  update public.appointments set
+    pest             = coalesce(nullif(p_pest, ''), pest),
+    treatment_type   = p_treatment,
+    targets          = p_targets,
+    starts_at        = coalesce(p_starts_at, starts_at),
+    ends_at          = coalesce(p_ends_at, ends_at),
+    re_entry_hours   = coalesce(p_re_entry_hours, re_entry_hours),
+    coverage_ends_at = p_coverage_ends,
+    revisit_at       = p_revisit,
+    notes            = p_notes
+  where id = p_appt;
+  if not found then raise exception 'Appointment not found'; end if;
+end;
+$$;
+
+-- Admin deletes an appointment.
+create or replace function public.delete_appointment(p_appt uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not (select public.is_admin()) then raise exception 'Admin only'; end if;
+  delete from public.appointments where id = p_appt;
+end;
+$$;
+
+revoke execute on function public.update_appointment(uuid,text,text,text,timestamptz,timestamptz,int,timestamptz,timestamptz,text) from public;
+revoke execute on function public.delete_appointment(uuid) from public;
+grant  execute on function public.update_appointment(uuid,text,text,text,timestamptz,timestamptz,int,timestamptz,timestamptz,text) to authenticated;
+grant  execute on function public.delete_appointment(uuid) to authenticated;
+
+-- Turn on Realtime for appointments so dashboards update live across users.
+do $$ begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'appointments'
+  ) then
+    alter publication supabase_realtime add table public.appointments;
+  end if;
+end $$;

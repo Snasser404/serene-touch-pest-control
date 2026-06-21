@@ -519,3 +519,49 @@ svg { display: block; }
 .login__google svg { flex: none; }
 .login__toggle { text-align: center; margin-top: 18px; font-size: .9rem; color: var(--muted); }
 .login__toggle a { color: var(--green-dark); font-weight: 700; }
+
+/* ---- Edit modal ---- */
+.pmodal { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 16px; background: rgba(6,21,40,.55); }
+.pmodal__card { width: min(560px, 100%); max-height: 92vh; overflow: auto; background: var(--paper); border-radius: 18px; box-shadow: var(--shadow-lg); }
+.pmodal__head { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.pmodal__head h3 { font-family: var(--font-display); margin: 0; font-size: 1.2rem; }
+.pmodal__close { margin-left: auto; background: none; border: none; font-size: 1.6rem; line-height: 1; cursor: pointer; color: var(--muted); }
+.pmodal__close:hover { color: var(--navy-900); }
+.pmodal__form { padding: 18px 20px 20px; }
+.field--full { grid-column: 1 / -1; }
+.pmodal__err { color: #dd3333; font-size: .85rem; margin: 8px 0 0; }
+.pmodal__err:empty { display: none; }
+.pmodal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+@media (max-width: 560px) { .pmodal__actions { flex-direction: column-reverse; } .pmodal__actions .btn { width: 100%; } }
+
+/* ---- Appointment row actions ---- */
+.appt-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.appt-acts button { font: inherit; font-size: .76rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--navy-800); cursor: pointer; }
+.appt-acts button:hover { border-color: var(--navy-700); }
+.appt-acts button[data-act="del"] { color: #c0392b; }
+.appt-acts button[data-act="del"]:hover { border-color: #c0392b; background: #fdf0ee; }
+
+/* ---- Admin customers list ---- */
+.cust-item { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+.cust-item:last-child { border-bottom: none; }
+.cust-item__info { flex: 1; min-width: 0; }
+.cust-item__info strong { color: var(--navy-900); }
+.cust-item__info small { display: block; color: var(--muted); font-size: .82rem; margin-top: 2px; }
+.cust-item__plan { font-size: .8rem; font-weight: 600; color: var(--navy-700); white-space: nowrap; }
+@media (max-width: 560px) { .cust-item__plan { display: none; } }
+
+/* ---- Customer upcoming visits list ---- */
+.up-item { display: flex; align-items: center; gap: 14px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+.up-item:last-child { border-bottom: none; }
+.up-item__date { text-align: center; min-width: 56px; }
+.up-item__date strong { display: block; font-family: var(--font-display); color: var(--navy-800); }
+.up-item__date span { font-size: .76rem; color: var(--muted); }
+.up-item__body { flex: 1; min-width: 0; }
+.up-item__body strong { color: var(--navy-900); }
+.up-item__body small { display: block; color: var(--muted); font-size: .82rem; }
+
+/* ---- Refresh button ---- */
+.refresh-btn { padding: 9px 11px; }
+.refresh-btn svg { display: block; }
+.refresh-btn.is-spin svg { animation: refreshSpin .7s linear; }
+@keyframes refreshSpin { to { transform: rotate(360deg); } }

@@ -130,6 +130,7 @@
     showApp();
     Object.keys(views).forEach(function (k) { views[k].classList.toggle("hidden", k !== role); });
     setAppbar(role);
+    ensureRefreshBtn();
     if (role === "customer") renderCustomer();
     else if (role === "technician") renderTechnician();
     else renderAdmin();
@@ -219,6 +220,7 @@
     renderTimeline(appt);
     renderPrep(appt);
     renderHistory(c.id);
+    renderCustomerUpcoming(c.id);
     initAssistant();
   }
 
@@ -417,13 +419,27 @@
         '<div data-label="Customer"><strong>' + escapeHtml(c.name) + "</strong><small>" + escapeHtml(cityOf(c.address)) + "</small></div>" +
         '<div data-label="Service">' + escapeHtml(a.pest) + "<small>" + escapeHtml(a.treatmentType || "") + "</small></div>" +
         '<div data-label="Technician"><select class="tech-select" data-id="' + a.id + '">' + techOpts(a.technicianId) + "</select></div>" +
-        '<div data-label="Status">' + badge(a.status) + "</div>" +
+        '<div data-label="Status">' + badge(a.status) +
+          '<div class="appt-acts">' +
+            '<button type="button" data-act="edit" data-id="' + a.id + '">Edit</button>' +
+            ((a.status !== "Cancelled" && a.status !== "Completed") ? '<button type="button" data-act="cancel" data-id="' + a.id + '">Cancel</button>' : "") +
+            '<button type="button" data-act="del" data-id="' + a.id + '">Delete</button>' +
+          "</div></div>" +
         "</div>";
     });
     $("#adminAppts").innerHTML = rows;
 
     $("#adminAppts").querySelectorAll(".tech-select").forEach(function (sel) {
       sel.addEventListener("change", function () { assignTech(sel.getAttribute("data-id"), sel.value || null); });
+    });
+    $("#adminAppts").querySelectorAll("[data-act]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-id"), act = btn.getAttribute("data-act");
+        var appt = getAppointments().filter(function (x) { return x.id === id; })[0];
+        if (act === "edit") { if (appt) openEditAppt(appt); }
+        else if (act === "cancel") { if (window.confirm("Cancel this appointment? The customer will see it as cancelled.")) cancelAppointment(id); }
+        else if (act === "del") { if (window.confirm("Delete this appointment permanently? This cannot be undone.")) deleteAppointment(id); }
+      });
     });
 
     var techHtml = "";
@@ -435,6 +451,7 @@
         '<span class="tech-item__count">' + count + " open job" + (count === 1 ? "" : "s") + "</span></div>";
     });
     $("#adminTechs").innerHTML = techHtml;
+    renderAdminCustomers();
   }
   function cityOf(addr) { if (!addr) return ""; var parts = String(addr).split(","); return parts.length > 1 ? parts[1].trim() : addr; }
 
@@ -699,6 +716,199 @@
   }
 
   /* ================================================================
+     EDIT MODAL + EXTENDED ACTIONS (edit / cancel / delete / profiles)
+  ================================================================ */
+  var IC_REFRESH = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/></svg>';
+  function dateInputVal(d) { d = new Date(d); var m = d.getMonth() + 1, day = d.getDate(); return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (day < 10 ? "0" + day : day); }
+  function timeInputVal(d) { d = new Date(d); var h = d.getHours(), mi = d.getMinutes(); return (h < 10 ? "0" + h : h) + ":" + (mi < 10 ? "0" + mi : mi); }
+
+  function openForm(opts) {
+    var overlay = el("div", "pmodal");
+    var fieldsHtml = (opts.fields || []).map(function (f) {
+      var inner;
+      if (f.type === "select")
+        inner = '<select name="' + f.name + '"' + (f.required ? " required" : "") + '>' + (f.options || []).map(function (o) { return '<option value="' + escapeHtml(o.value) + '"' + (o.value === f.value ? " selected" : "") + ">" + escapeHtml(o.label) + "</option>"; }).join("") + "</select>";
+      else if (f.type === "textarea")
+        inner = '<textarea name="' + f.name + '" rows="2" placeholder="' + escapeHtml(f.placeholder || "") + '">' + escapeHtml(f.value || "") + "</textarea>";
+      else
+        inner = '<input name="' + f.name + '" type="' + (f.type || "text") + '"' + (f.required ? " required" : "") + (f.step ? ' step="' + f.step + '"' : "") + (f.min != null ? ' min="' + f.min + '"' : "") + ' value="' + escapeHtml(f.value == null ? "" : f.value) + '" placeholder="' + escapeHtml(f.placeholder || "") + '" />';
+      return '<label class="field' + (f.full ? " field--full" : "") + '"><span>' + escapeHtml(f.label) + "</span>" + inner + "</label>";
+    }).join("");
+    overlay.innerHTML =
+      '<div class="pmodal__card"><div class="pmodal__head"><h3>' + escapeHtml(opts.title) + '</h3><button class="pmodal__close" type="button" aria-label="Close">&times;</button></div>' +
+      '<form class="admin-form pmodal__form"><div class="admin-form__grid">' + fieldsHtml + '</div><p class="pmodal__err" role="alert"></p>' +
+      '<div class="pmodal__actions"><button type="button" class="btn btn--ghost pmodal__cancel">Cancel</button>' +
+      '<button type="submit" class="btn btn--primary">' + escapeHtml(opts.submitLabel || "Save") + "</button></div></form></div>";
+    document.body.appendChild(overlay);
+    function close() { overlay.remove(); }
+    overlay.querySelector(".pmodal__close").addEventListener("click", close);
+    overlay.querySelector(".pmodal__cancel").addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    var errEl = overlay.querySelector(".pmodal__err");
+    overlay.querySelector("form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var values = {}; (opts.fields || []).forEach(function (f) { values[f.name] = (e.target[f.name] || {}).value; });
+      opts.onSubmit(values, close, function (m) { errEl.textContent = m || ""; });
+    });
+    setTimeout(function () { var first = overlay.querySelector("input,select,textarea"); if (first) first.focus(); }, 50);
+  }
+
+  function updateAppointment(id, args, done) {
+    if (MODE === "real") {
+      sb.rpc("update_appointment", Object.assign({ p_appt: id }, args)).then(function (r) {
+        done && done();
+        if (r.error) { toast(r.error.message || "Update failed"); return; }
+        toast("Appointment updated ✅"); reloadThenRender();
+      });
+    } else {
+      demoPatch(id, { pest: args.p_pest, treatmentType: args.p_treatment, targets: args.p_targets, start: args.p_starts_at, end: args.p_ends_at, reEntryHours: args.p_re_entry_hours, coverageEnds: args.p_coverage_ends, revisit: args.p_revisit, notes: args.p_notes });
+      done && done(); toast("Appointment updated (demo)"); rerenderCurrent();
+    }
+  }
+  function deleteAppointment(id) {
+    if (MODE === "real") {
+      sb.rpc("delete_appointment", { p_appt: id }).then(function (r) {
+        if (r.error) { toast(r.error.message || "Delete failed"); return; }
+        toast("Appointment deleted"); reloadThenRender();
+      });
+    } else {
+      STATE.appointments = STATE.appointments.filter(function (a) { return a.id !== id; });
+      var o = demoLoad(); delete o[id]; localStorage.setItem(DEMO_KEY, JSON.stringify(o));
+      toast("Appointment deleted (demo)"); rerenderCurrent();
+    }
+  }
+  function cancelAppointment(id) {
+    if (MODE === "real") {
+      sb.rpc("advance_status", { p_appt: id, p_status: "Cancelled" }).then(function (r) {
+        if (r.error) { toast(r.error.message || "Couldn't cancel"); return; }
+        toast("Appointment cancelled"); reloadThenRender();
+      });
+    } else { demoPatch(id, { status: "Cancelled" }); toast("Appointment cancelled (demo)"); rerenderCurrent(); }
+  }
+  function editProfile(id, args, done) {
+    if (MODE === "real") {
+      sb.rpc("upsert_profile_details", Object.assign({ p_id: id }, args)).then(function (r) {
+        done && done();
+        if (r.error) { toast(r.error.message || "Update failed"); return; }
+        toast("Details updated ✅"); reloadThenRender();
+      });
+    } else {
+      var who = STATE.customers.concat(STATE.technicians).filter(function (p) { return p.id === id; })[0];
+      if (who) { if (args.p_full_name) { who.name = args.p_full_name; who.firstName = firstWord(args.p_full_name); who.initials = initials(args.p_full_name); } if (args.p_phone != null) who.phone = args.p_phone; if (args.p_address != null) who.address = args.p_address; if (args.p_plan != null) who.plan = args.p_plan; }
+      done && done(); toast("Details updated (demo)"); rerenderCurrent();
+    }
+  }
+
+  function openEditAppt(a) {
+    var start = a.start ? new Date(a.start) : new Date();
+    var durMin = (a.end && a.start) ? Math.max(15, Math.round((new Date(a.end) - new Date(a.start)) / 60000)) : 90;
+    openForm({
+      title: "Edit appointment", submitLabel: "Save changes",
+      fields: [
+        { name: "pest", label: "Pest", value: a.pest, required: true },
+        { name: "treatment", label: "Treatment", value: a.treatmentType },
+        { name: "targets", label: "Focus area", value: a.targets },
+        { name: "date", label: "Date", type: "date", value: dateInputVal(start), required: true },
+        { name: "time", label: "Time", type: "time", value: timeInputVal(start), required: true },
+        { name: "duration", label: "Duration (min)", type: "number", min: 15, step: 15, value: durMin },
+        { name: "reentry", label: "Re-entry (hours)", type: "number", min: 0, value: a.reEntryHours || 0 },
+        { name: "revisit", label: "Revisit date", type: "date", value: a.revisit ? dateInputVal(new Date(a.revisit)) : "" },
+        { name: "notes", label: "Notes", type: "textarea", value: a.notes, full: true }
+      ],
+      onSubmit: function (v, close, setErr) {
+        if (!v.date || !v.time) { setErr("Date and time are required."); return; }
+        var s = new Date(v.date + "T" + v.time);
+        var e = new Date(s.getTime() + (parseInt(v.duration, 10) || 90) * 60000);
+        updateAppointment(a.id, {
+          p_pest: (v.pest || "").trim(), p_treatment: (v.treatment || "").trim(), p_targets: (v.targets || "").trim(),
+          p_starts_at: s.toISOString(), p_ends_at: e.toISOString(), p_re_entry_hours: parseInt(v.reentry, 10) || 0,
+          p_coverage_ends: a.coverageEnds || null, p_revisit: v.revisit ? new Date(v.revisit + "T09:00").toISOString() : null,
+          p_notes: (v.notes || "").trim()
+        }, close);
+      }
+    });
+  }
+  function openEditCustomer(p) {
+    openForm({
+      title: "Edit " + (p.name || "person"), submitLabel: "Save",
+      fields: [
+        { name: "full_name", label: "Full name", value: p.name },
+        { name: "phone", label: "Phone", value: p.phone },
+        { name: "address", label: "Address", value: p.address, full: true },
+        { name: "plan", label: "Plan", value: p.plan }
+      ],
+      onSubmit: function (v, close) {
+        editProfile(p.id, { p_full_name: (v.full_name || "").trim(), p_phone: (v.phone || "").trim(), p_address: (v.address || "").trim(), p_plan: (v.plan || "").trim(), p_role: null }, close);
+      }
+    });
+  }
+
+  /* ---- admin: customers management panel ---- */
+  function renderAdminCustomers() {
+    var card = $("#adminCustomersCard");
+    if (!card) {
+      card = el("section", "card card--wide"); card.id = "adminCustomersCard";
+      card.innerHTML = '<div class="card__head"><span class="card__icon" aria-hidden="true">' + IC.user + '</span><h2>Customers</h2><span class="card__hint">Tap Edit to update contact details</span></div><div id="adminCustomersList"></div>';
+      var techsCard = $("#adminTechs").closest(".card");
+      techsCard.parentNode.insertBefore(card, techsCard);
+    }
+    var list = $("#adminCustomersList"); list.innerHTML = "";
+    if (!STATE.customers.length) { list.innerHTML = '<p class="muted-note">No customers yet. Customers appear here once they register or you add them.</p>'; return; }
+    STATE.customers.slice().sort(function (a, b) { return (a.name || "").localeCompare(b.name || ""); }).forEach(function (c) {
+      var row = el("div", "cust-item");
+      row.innerHTML = '<span class="avatar avatar--sm">' + c.initials + "</span>" +
+        '<div class="cust-item__info"><strong>' + escapeHtml(c.name) + "</strong><small>" + escapeHtml(c.phone || "no phone") + (c.address ? " · " + escapeHtml(cityOf(c.address)) : "") + "</small></div>" +
+        '<span class="cust-item__plan">' + escapeHtml(c.plan || "—") + "</span>" +
+        '<button class="btn btn--ghost btn--sm" data-edit="' + c.id + '">Edit</button>';
+      list.appendChild(row);
+    });
+    list.querySelectorAll("[data-edit]").forEach(function (b) {
+      b.addEventListener("click", function () { var c = customerById(b.getAttribute("data-edit")); if (c) openEditCustomer(c); });
+    });
+  }
+
+  /* ---- customer: list of all upcoming visits (when more than one) ---- */
+  function renderCustomerUpcoming(custId) {
+    var ups = getAppointments().filter(function (a) { return a.customerId === custId && a.status !== "Completed" && a.status !== "Cancelled"; })
+      .sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
+    var card = $("#custUpcomingCard");
+    if (ups.length <= 1) { if (card) card.remove(); return; }
+    if (!card) {
+      card = el("section", "card card--wide"); card.id = "custUpcomingCard";
+      card.innerHTML = '<div class="card__head"><span class="card__icon" aria-hidden="true">' + IC.calendar + '</span><h2>Your upcoming visits</h2></div><div id="custUpcomingList"></div>';
+      var grid = $("#customerView .grid"); grid.parentNode.insertBefore(card, grid);
+    }
+    var list = $("#custUpcomingList"); list.innerHTML = "";
+    ups.forEach(function (a) {
+      var row = el("div", "up-item");
+      row.innerHTML = '<div class="up-item__date"><strong>' + fmtDateShort(a.start) + "</strong><span>" + fmtTime(a.start) + "</span></div>" +
+        '<div class="up-item__body"><strong>' + escapeHtml(a.pest) + "</strong><small>" + escapeHtml(a.treatmentType || "Treatment") + " · " + relDays(a.start) + "</small></div>" + badge(a.status);
+      list.appendChild(row);
+    });
+  }
+
+  /* ---- refresh button in the app bar ---- */
+  function ensureRefreshBtn() {
+    if ($("#refreshBtn")) return;
+    var so = $("#signOutBtn"); if (!so) return;
+    var b = el("button", "btn btn--ghost btn--sm refresh-btn"); b.id = "refreshBtn"; b.type = "button"; b.title = "Refresh"; b.setAttribute("aria-label", "Refresh"); b.innerHTML = IC_REFRESH;
+    so.parentNode.insertBefore(b, so);
+    b.addEventListener("click", function () { b.classList.add("is-spin"); reloadThenRender(); toast("Refreshed"); setTimeout(function () { b.classList.remove("is-spin"); }, 700); });
+  }
+
+  /* ---- realtime: live updates across users ---- */
+  var rtChannel = null, reloadTimer = null;
+  function scheduleReload() { clearTimeout(reloadTimer); reloadTimer = setTimeout(function () { reloadThenRender(); }, 450); }
+  function subscribeRealtime() {
+    if (MODE !== "real" || rtChannel || !sb.channel) return;
+    try {
+      rtChannel = sb.channel("serene-appts")
+        .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, scheduleReload)
+        .subscribe();
+    } catch (e) { /* realtime optional */ }
+  }
+
+  /* ================================================================
      DATA LOADING (real mode)
   ================================================================ */
   function buildHistoryFromAppointments() {
@@ -880,7 +1090,7 @@
     loadingFor = uid; currentUserId = uid;
     setMsg("Loading your dashboard…");
     loadForSession(session.user).then(function () {
-      loadingFor = null; shownFor = uid; setMsg(""); routeTo(STATE.role);
+      loadingFor = null; shownFor = uid; setMsg(""); routeTo(STATE.role); subscribeRealtime();
     }).catch(function (e) {
       // reset so the user can simply try again (no stranded "Signing in…")
       loadingFor = null; shownFor = null; currentUserId = null;
