@@ -99,8 +99,10 @@
       if (has("rodent", "mice", "mouse", "rat")) return "We deal with <b>mice & rats</b> — removal plus sealing entry points so they stay out. See <a href='rodent-control.html'>Rodent Control</a>, or " + quote + ".";
       if (has("wasp", "hornet", "spider", "wildlife", "flea", "silverfish", "earwig", "what pest", "which pest", "what do you treat", "service", "what do you do", "do you do", "treat", "get rid", "pest"))
         return "We treat <b>ants, bed bugs, cockroaches, and rodents</b>, plus common GTA pests like wasps and spiders. Tell me your pest, or " + quote + " and we'll take care of it.";
+      if (has("plan", "subscription", "monthly", "quarterly", "preventative", "preventive", "recurring", "package", "membership"))
+        return "We offer a <b>one-time treatment</b> (with a free 2-week follow-up) plus <b>quarterly and monthly protection plans</b> with free re-treatments. See our <a href='plans.html'>Plans &amp; Pricing</a>, or " + quote + ".";
       if (has("price", "cost", "how much", "quote", "estimate", "fee", "charge", "afford", "cheap", "expensive"))
-        return "Every home is different, so we start with a <b>free, no-obligation quote</b>. You can " + quote + " or call " + call + " and we'll give you a price up front — no surprises.";
+        return "Plans start around <b>$179 one-time</b> or <b>$129/visit on a quarterly plan</b> — full details on <a href='plans.html'>Plans &amp; Pricing</a>. Every home is different, so we confirm with a <b>free, no-obligation quote</b>: " + quote + " or call " + call + ".";
       if (has("book", "appoint", "schedule", "visit", "come out", "set up", "when can", "availab", "reserve"))
         return "Happy to help you book! Use the <a href='" + contactHref() + "'>quote form</a> with your details, or call/text " + call + " — Mon–Sat, 8am–7pm. Same-day service is often available.";
       if (has("area", "serve", "location", "near me", "city", "toronto", "mississauga", "scarborough", "brampton", "vaughan", "markham", "etobicoke", "north york", "richmond hill", "oakville", "burlington", "milton", "pickering", "ajax", "whitby", "oshawa", "newmarket", "aurora", "caledon", "gta", "cover"))
