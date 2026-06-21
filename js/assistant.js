@@ -102,7 +102,7 @@
       if (has("plan", "subscription", "monthly", "quarterly", "preventative", "preventive", "recurring", "package", "membership"))
         return "We offer a <b>one-time treatment</b> (with a free 2-week follow-up) plus <b>quarterly and monthly protection plans</b> with free re-treatments. See our <a href='plans.html'>Plans &amp; Pricing</a>, or " + quote + ".";
       if (has("price", "cost", "how much", "quote", "estimate", "fee", "charge", "afford", "cheap", "expensive"))
-        return "Plans start around <b>$179 one-time</b> or <b>$129/visit on a quarterly plan</b> — full details on <a href='plans.html'>Plans &amp; Pricing</a>. Every home is different, so we confirm with a <b>free, no-obligation quote</b>: " + quote + " or call " + call + ".";
+        return "Pricing depends on your home, the pest, and how severe it is — a condo is different from a house — so we don't quote a flat rate. We give you an exact <b>free, no-obligation quote</b> after a quick assessment. See our <a href='plans.html'>plans</a>, " + quote + ", or call " + call + ".";
       if (has("book", "appoint", "schedule", "visit", "come out", "set up", "when can", "availab", "reserve"))
         return "Happy to help you book! Use the <a href='" + contactHref() + "'>quote form</a> with your details, or call/text " + call + " — Mon–Sat, 8am–7pm. Same-day service is often available.";
       if (has("area", "serve", "location", "near me", "city", "toronto", "mississauga", "scarborough", "brampton", "vaughan", "markham", "etobicoke", "north york", "richmond hill", "oakville", "burlington", "milton", "pickering", "ajax", "whitby", "oshawa", "newmarket", "aurora", "caledon", "gta", "cover"))

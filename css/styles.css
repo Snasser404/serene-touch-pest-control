@@ -1728,6 +1728,7 @@ em { font-style: italic; }
 .plan__price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 18px 0; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
 .plan__from { color: var(--muted); font-size: .9rem; }
 .plan__price strong { font-family: var(--font-display); font-size: 2.6rem; line-height: 1; color: var(--ink-950); letter-spacing: -.02em; }
+.plan__price--quote strong { font-size: 1.55rem; letter-spacing: -.01em; }
 .plan__unit { color: var(--muted); font-size: .84rem; width: 100%; }
 .plan__features { display: flex; flex-direction: column; gap: 11px; margin-bottom: 24px; flex: 1; }
 .plan__features li { position: relative; padding-left: 28px; font-size: .94rem; color: var(--ink-900); line-height: 1.45; }
