@@ -12,7 +12,7 @@
   if (window.__sereneSiteChat) return;
   window.__sereneSiteChat = true;
 
-  var PHONE = "+14389886709", PHONE_DISPLAY = "438-988-6709", EMAIL = "info@serenetouchpest.ca";
+  var PHONE = "+14389886709", PHONE_DISPLAY = "438-988-6709", EMAIL = "support@serenetouch.ca";
 
   var CHAT_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM7 9h10v2H7zm0 4h7v2H7z"/></svg>';
   var SEND_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>';

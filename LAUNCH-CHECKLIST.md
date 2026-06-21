@@ -27,7 +27,7 @@ and `+14389886709` everywhere. *(I can do this for you in one pass — just send
 3. In Search Console → **Sitemaps**, submit: `sitemap.xml`. (All 25+ pages get discovered.)
 
 ### 5. Buy a custom domain
-Register e.g. **serenetouchpest.ca** (~$15/yr at Namecheap, Cloudflare, GoDaddy…). Then it points
+Register e.g. **serenetouch.ca** (~$15/yr at Namecheap, Cloudflare, GoDaddy…). Then it points
 at this site via a `CNAME` file + GitHub Pages settings. *(I'll configure it once you own the domain.)*
 
 ### 6. Make the reviews real

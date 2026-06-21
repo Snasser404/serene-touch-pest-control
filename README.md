@@ -27,7 +27,7 @@ Most details were filled in from your poster. A few are **placeholders** — upd
 
 | Placeholder | Where | Replace with |
 |-------------|-------|--------------|
-| `info@serenetouchpest.ca` | top bar, contact, footer | Your real email |
+| `support@serenetouch.ca` | top bar, contact, footer | Your real email |
 | `the Greater Toronto Area & surrounding areas` | top bar, contact, footer | Your real service area |
 | `Mon–Sat: 8am–7pm` | top bar, contact, footer | Your real hours |
 | `10+`, `5,000+`, `4.9★` | hero card | Your real stats (or remove) |
@@ -202,5 +202,5 @@ git commit -m "Update site"
 git push
 ```
 
-You can connect a custom domain (e.g. `serenetouchpest.ca`) later in the repo's
+You can connect a custom domain (e.g. `serenetouch.ca`) later in the repo's
 **Settings → Pages** section.

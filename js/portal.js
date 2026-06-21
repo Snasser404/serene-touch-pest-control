@@ -623,7 +623,7 @@
     if (has("cost", "price", "pay", "invoice", "bill", "charge", "how much", "fee"))
       return "Billing for your " + plan + " follows your service agreement. For an invoice or any billing question, call us at <a href='tel:+14389886709'>438-988-6709</a> and we'll sort it out right away.";
     if (has("human", "person", "call", "phone", "speak", "representative", "agent", "contact", "talk to"))
-      return "You can reach the Serene Touch team at <a href='tel:+14389886709'>438-988-6709</a> or <a href='mailto:info@serenetouchpest.ca'>info@serenetouchpest.ca</a> — Mon–Sat, 8am–7pm.";
+      return "You can reach the Serene Touch team at <a href='tel:+14389886709'>438-988-6709</a> or <a href='mailto:support@serenetouch.ca'>support@serenetouch.ca</a> — Mon–Sat, 8am–7pm.";
     if (has("thank", "thx", "appreciate", "great", "awesome", "perfect")) return "You're very welcome, " + fname + "! 🐾 Anything else I can help with?";
     if (has("address", "where", "location", "my place", "my home")) return "We have your service address as <b>" + escapeHtml(c.address || "the address on file") + "</b>. If that's not right, let us know at 438-988-6709.";
     return "I can help with your <b>appointment</b>, how to <b>prepare</b>, your <b>treatment</b>, your <b>revisit</b>, plan coverage, and safety. Try a quick question below — or for anything else, call us at <a href='tel:+14389886709'>438-988-6709</a>.";
