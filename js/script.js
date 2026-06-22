@@ -4,12 +4,6 @@
 (function () {
   "use strict";
 
-  /* rAF-throttle scroll work so layout reads don't force a synchronous reflow */
-  function rafThrottle(fn) {
-    var queued = false;
-    return function () { if (queued) return; queued = true; requestAnimationFrame(function () { queued = false; fn(); }); };
-  }
-
   /* ---------- Current year in footer ---------- */
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -20,8 +14,8 @@
     if (window.scrollY > 8) header.classList.add("is-scrolled");
     else header.classList.remove("is-scrolled");
   }
-  window.addEventListener("scroll", rafThrottle(onScroll), { passive: true });
-  requestAnimationFrame(onScroll);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 
   /* ---------- Mobile nav toggle ---------- */
   var navToggle = document.getElementById("navToggle");
@@ -190,12 +184,6 @@
 =================================================================== */
 (function () {
   "use strict";
-
-  /* rAF-throttle scroll work so layout reads don't force a synchronous reflow */
-  function rafThrottle(fn) {
-    var queued = false;
-    return function () { if (queued) return; queued = true; requestAnimationFrame(function () { queued = false; fn(); }); };
-  }
   var reduceMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -224,8 +212,8 @@
   function onTopScroll() {
     toTop.classList.toggle("is-show", window.scrollY > 700);
   }
-  window.addEventListener("scroll", rafThrottle(onTopScroll), { passive: true });
-  requestAnimationFrame(onTopScroll);
+  window.addEventListener("scroll", onTopScroll, { passive: true });
+  onTopScroll();
   toTop.addEventListener("click", function () {
     window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
   });
@@ -278,7 +266,7 @@
       var y = h.scrollTop || document.body.scrollTop;
       bar.style.width = (max > 0 ? (y / max) * 100 : 0) + "%";
     }
-    window.addEventListener("scroll", rafThrottle(onProgress), { passive: true });
+    window.addEventListener("scroll", onProgress, { passive: true });
     onProgress();
   }
 })();
