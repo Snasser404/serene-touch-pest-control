@@ -1,5 +1,6 @@
 # Local tooling / editor config (not part of the website)
 .claude/
+_preview.py
 
 # OS junk
 .DS_Store
