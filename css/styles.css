@@ -1,6 +1,6 @@
 /* ===================================================================
    Serene Touch Pest Control — Stylesheet
-   Brand: Navy #0e3a6b · Gold #f6c324 · Emerald #22c55e
+   Brand: Navy #0e3a6b · Amber #d99423 · Emerald #22c55e
 =================================================================== */
 
 /* ---------- Design tokens ---------- */
@@ -10,8 +10,8 @@
   --navy-700: #15448a;
   --navy-600: #1b56a8;
   --blue-100: #e8f1fb;
-  --gold:     #f6c324;
-  --gold-dark:#e0ab06;
+  --gold:     #d99423;
+  --gold-dark:#b07a12;
   --green:    #22c55e;
   --green-dark:#16a34a;
   --ink:      #1c2a3a;
@@ -94,6 +94,14 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   border-color: rgba(255, 255, 255, .55);
 }
 .btn--ghost:hover { --btn-bg: rgba(255,255,255,.12); border-color:#fff; }
+
+/* Outline button for LIGHT backgrounds (readable navy, fills on hover) */
+.btn--outline {
+  --btn-bg: #fff;
+  --btn-fg: var(--navy-800);
+  border-color: var(--navy-800);
+}
+.btn--outline:hover { --btn-bg: var(--navy-800); --btn-fg: #fff; border-color: var(--navy-800); }
 
 .btn--lg { padding: 15px 30px; font-size: 1.02rem; }
 .btn--block { width: 100%; }
@@ -310,7 +318,7 @@ a.topbar__item:hover { color: #fff; }
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(1100px 500px at 85% -10%, rgba(246, 195, 36, .18), transparent 60%),
+    radial-gradient(1100px 500px at 85% -10%, rgba(217, 148, 35, .18), transparent 60%),
     radial-gradient(900px 600px at 10% 110%, rgba(34, 197, 94, .20), transparent 55%),
     linear-gradient(115deg, rgba(10, 44, 84, .95) 0%, rgba(14, 58, 107, .9) 42%, rgba(10, 44, 84, .74) 100%),
     url("../images/photos/hero-living-room.webp") center / cover no-repeat;
@@ -336,8 +344,8 @@ a.topbar__item:hover { color: #fff; }
   align-items: center;
   gap: 8px;
   padding: 7px 15px;
-  background: rgba(246, 195, 36, .15);
-  border: 1px solid rgba(246, 195, 36, .4);
+  background: rgba(217, 148, 35, .15);
+  border: 1px solid rgba(217, 148, 35, .4);
   color: var(--gold);
   border-radius: 999px;
   font-weight: 600;
@@ -510,7 +518,7 @@ a.topbar__item:hover { color: #fff; }
 }
 .service-card--featured {
   border-color: var(--gold);
-  box-shadow: 0 14px 40px rgba(246, 195, 36, .22);
+  box-shadow: 0 14px 40px rgba(217, 148, 35, .22);
 }
 .service-card__badge {
   position: absolute;
@@ -584,7 +592,7 @@ a.topbar__item:hover { color: #fff; }
   position: absolute;
   top: -40px; right: -40px;
   width: 160px; height: 160px;
-  background: radial-gradient(circle, rgba(246,195,36,.25), transparent 70%);
+  background: radial-gradient(circle, rgba(217,148,35,.25), transparent 70%);
 }
 .why__media-card svg { fill: var(--gold); margin: 0 auto 18px; }
 .why__media-card h3 { color: #fff; font-size: 1.5rem; }
@@ -672,7 +680,7 @@ a.topbar__item:hover { color: #fff; }
 =================================================================== */
 .cta-banner {
   background:
-    radial-gradient(700px 300px at 0% 50%, rgba(246,195,36,.2), transparent 60%),
+    radial-gradient(700px 300px at 0% 50%, rgba(217,148,35,.2), transparent 60%),
     linear-gradient(120deg, var(--green-dark), var(--navy-800));
 }
 .cta-banner__inner {
@@ -920,9 +928,10 @@ a.topbar__item:hover { color: #fff; }
   text-align: center;
   padding: clamp(54px, 8vw, 96px) 0 clamp(40px, 6vw, 72px);
   background:
-    radial-gradient(800px 400px at 80% -20%, rgba(246,195,36,.18), transparent 60%),
-    radial-gradient(700px 400px at 10% 120%, rgba(34,197,94,.20), transparent 55%),
-    linear-gradient(160deg, var(--navy-700), var(--navy-900));
+    radial-gradient(700px 360px at 85% -20%, rgba(217,148,35,.16), transparent 60%),
+    linear-gradient(160deg, rgba(16,48,89,.90), rgba(10,34,64,.95)),
+    url("../images/photos/blog-hero.webp") center / cover no-repeat,
+    var(--navy-900);
 }
 .blog-hero__eyebrow {
   display: inline-block; font-family: var(--font-body); font-weight: 700;
@@ -982,13 +991,15 @@ a.topbar__item:hover { color: #fff; }
   color: #eaf2fb;
   padding: clamp(40px, 7vw, 80px) 0 clamp(56px, 8vw, 90px);
   background:
-    radial-gradient(700px 360px at 85% -20%, rgba(246,195,36,.16), transparent 60%),
-    linear-gradient(160deg, var(--navy-700), var(--navy-900));
+    radial-gradient(700px 360px at 85% -20%, rgba(217,148,35,.16), transparent 60%),
+    linear-gradient(160deg, rgba(21,68,138,.88), rgba(10,34,64,.95)),
+    url("../images/photos/blog-hero.webp") center / cover no-repeat,
+    var(--navy-900);
 }
 .post-back { display: inline-block; color: var(--gold); font-weight: 600; font-size: .92rem; margin-bottom: 18px; }
 .post-back:hover { color: #fff; }
 .post-cat {
-  display: inline-block; background: rgba(246,195,36,.18); border: 1px solid rgba(246,195,36,.45);
+  display: inline-block; background: rgba(217,148,35,.18); border: 1px solid rgba(217,148,35,.45);
   color: var(--gold); font-family: var(--font-body); font-weight: 700; font-size: .72rem;
   letter-spacing: .5px; text-transform: uppercase; padding: 4px 12px; border-radius: 999px; margin-bottom: 14px;
 }
@@ -1012,7 +1023,7 @@ a.topbar__item:hover { color: #fff; }
   margin: 46px 0 10px; padding: clamp(26px, 4vw, 40px); border-radius: var(--radius); text-align: center;
   color: #fff;
   background:
-    radial-gradient(500px 220px at 10% 0%, rgba(246,195,36,.2), transparent 60%),
+    radial-gradient(500px 220px at 10% 0%, rgba(217,148,35,.2), transparent 60%),
     linear-gradient(120deg, var(--green-dark), var(--navy-800));
 }
 .post-cta h3 { color: #fff; font-size: 1.5rem; }
@@ -1029,14 +1040,14 @@ a.topbar__item:hover { color: #fff; }
 =================================================================== */
 .svc-hero {
   position: relative; color: #eaf2fb; overflow: hidden; isolation: isolate;
-  padding: clamp(48px, 7vw, 86px) 0 clamp(52px, 7vw, 88px);
+  text-align: center;
+  padding: clamp(54px, 8vw, 96px) 0 clamp(40px, 6vw, 72px);
   background-color: var(--navy-900);
   background-image:
-    radial-gradient(800px 420px at 82% -20%, rgba(246,195,36,.16), transparent 60%),
-    radial-gradient(700px 460px at 8% 120%, rgba(34,197,94,.18), transparent 55%),
-    linear-gradient(155deg, rgba(21,68,138,.9), rgba(10,44,84,.95)),
+    radial-gradient(700px 360px at 85% -20%, rgba(217,148,35,.16), transparent 60%),
+    linear-gradient(160deg, rgba(16,48,89,.90), rgba(10,34,64,.95)),
     var(--svc-hero-img, none);
-  background-size: auto, auto, auto, cover;
+  background-size: auto, auto, cover;
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -1056,24 +1067,19 @@ a.topbar__item:hover { color: #fff; }
 .svc-band__card { max-width: 640px; text-align: center; }
 .svc-band__card h2 { color: #fff; font-size: clamp(1.6rem, 3vw, 2.3rem); }
 .svc-band__card p { color: #e4eefb; font-size: 1.08rem; margin: 12px auto 22px; max-width: 52ch; }
-.svc-hero__inner { display: grid; grid-template-columns: 1.25fr .75fr; gap: 44px; align-items: center; }
+.svc-hero__inner { max-width: 760px; margin: 0 auto; text-align: center; }
 .svc-hero__eyebrow {
   display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; margin-bottom: 16px;
-  background: rgba(246,195,36,.15); border: 1px solid rgba(246,195,36,.4); color: var(--gold);
+  background: rgba(217,148,35,.15); border: 1px solid rgba(217,148,35,.4); color: var(--gold);
   border-radius: 999px; font-family: var(--font-body); font-weight: 600; font-size: .82rem;
 }
 .svc-hero__eyebrow svg { fill: var(--gold); }
 .svc-hero__title { color: #fff; font-size: clamp(2rem, 4.4vw, 3.1rem); font-weight: 800; line-height: 1.15; }
-.svc-hero__text { margin-top: 16px; color: #c8d8ec; font-size: clamp(1.02rem, 1.4vw, 1.16rem); max-width: 40em; }
-.svc-hero__cta { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 28px; }
-.svc-hero__visual { display: flex; justify-content: center; }
-.svc-hero__badge {
-  width: clamp(160px, 22vw, 220px); aspect-ratio: 1; border-radius: 30px;
-  display: grid; place-items: center;
-  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(6px);
-  box-shadow: var(--shadow-lg);
-}
-.svc-hero__badge svg { width: 56%; height: 56%; fill: var(--gold); }
+.svc-hero__text { margin: 16px auto 0; color: #c8d8ec; font-size: clamp(1.02rem, 1.4vw, 1.16rem); max-width: 44em; }
+.svc-hero__cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 13px; margin-top: 28px; }
+.svc-hero .hero__chips { justify-content: center; }
+/* Side badge removed for the centered, blog-consistent hero */
+.svc-hero__visual { display: none; }
 
 .breadcrumb { font-size: .85rem; color: var(--muted); padding: 16px 0 0; }
 .breadcrumb a { color: var(--navy-700); font-weight: 600; }
@@ -1130,8 +1136,6 @@ a.topbar__item:hover { color: #fff; }
 .svc-cta-mid .btn { margin: 4px; }
 
 @media (max-width: 900px) {
-  .svc-hero__inner { grid-template-columns: 1fr; }
-  .svc-hero__visual { justify-content: flex-start; }
   .svc-steps { grid-template-columns: repeat(2, 1fr); }
   .svc-split { grid-template-columns: 1fr; }
   .svc-split--reverse .svc-split__media { order: 0; }
@@ -1173,8 +1177,8 @@ html { accent-color: var(--green); }
 /* Richer primary / gold buttons */
 .btn--primary { background-image: linear-gradient(135deg, #34d399, var(--green-dark)); }
 .btn--primary:hover { box-shadow: 0 14px 30px rgba(22, 163, 74, .38); }
-.btn--gold { background-image: linear-gradient(135deg, #ffd84d, var(--gold-dark)); }
-.btn--gold:hover { box-shadow: 0 14px 30px rgba(224, 171, 6, .4); }
+.btn--gold { background-image: linear-gradient(135deg, #eab64f, var(--gold-dark)); }
+.btn--gold:hover { box-shadow: 0 14px 30px rgba(176, 122, 18, .4); }
 
 /* Service cards: photo headers with overlapping icon */
 .service-card__media {
@@ -1252,7 +1256,7 @@ a.area-pill:hover { transform: translateY(-4px); box-shadow: var(--shadow); colo
 .area-pill--more { background: transparent; border-style: dashed; color: var(--muted); font-family: var(--font-body, sans-serif); font-size: 1rem; font-weight: 700; }
 
 /* Legal pages (privacy / terms) */
-.legal-hero { background: var(--ink-950, #0a2c54); color: #eaf2fb; padding: clamp(42px, 6vw, 76px) 0 clamp(34px, 4vw, 52px); }
+.legal-hero { background: linear-gradient(160deg, rgba(6,21,40,.90), rgba(10,34,64,.94)), url("../images/photos/cozy-living.webp") center / cover no-repeat, var(--ink-950, #0a2c54); color: #eaf2fb; padding: clamp(42px, 6vw, 76px) 0 clamp(34px, 4vw, 52px); }
 .legal-hero h1 { color: #fff; font-size: clamp(1.9rem, 4vw, 2.8rem); }
 .legal-hero p { color: #b9cae0; margin-top: 10px; }
 .legal { width: min(100% - 40px, 820px); margin: 0 auto; padding: clamp(36px, 5vw, 64px) 0 clamp(48px, 7vw, 80px); }
@@ -1284,8 +1288,8 @@ a.area-pill:hover { transform: translateY(-4px); box-shadow: var(--shadow); colo
   --bg-soft: #f3efe5;
   --line: #e7e1d1;
 
-  --gold: #f2b517;
-  --gold-dark: #d59a05;
+  --gold: #d99423;
+  --gold-dark: #b07a12;
   --green: #1fb45c;
   --green-dark: #0f8a43;
 
@@ -1706,7 +1710,7 @@ em { font-style: italic; }
 }
 
 /* ===================== PLANS / PRICING PAGE ===================== */
-.plans-hero { background: linear-gradient(160deg, var(--ink-950), var(--ink-900)); color: #fff; padding: 64px 0 72px; text-align: center; }
+.plans-hero { background: linear-gradient(160deg, rgba(6,21,40,.86), rgba(10,34,64,.93)), url("../images/photos/plans-hero.webp") center / cover no-repeat, var(--ink-950); color: #fff; padding: 64px 0 72px; text-align: center; }
 .plans-hero__inner { max-width: 760px; }
 .plans-hero__eyebrow { display:inline-block; font-family: var(--font-body); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: .74rem; color: var(--gold); margin-bottom: 16px; }
 .plans-hero h1 { font-family: var(--font-display); font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.05; color: #fff; }
