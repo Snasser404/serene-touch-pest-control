@@ -13,7 +13,8 @@
   });
 
   function fmtDate(iso) {
-    return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    // Parse as local midnight (not UTC) so the day doesn't shift back in western timezones.
+    return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   }
   function escAttr(s) { return String(s).replace(/"/g, "&quot;"); }
 

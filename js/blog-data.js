@@ -9,6 +9,72 @@
 =================================================================== */
 window.SERENE_BLOG = [
   {
+    slug: "how-to-get-rid-of-mice",
+    title: "How to Get Rid of Mice: Effective & Humane Solutions",
+    excerpt: "Mice can turn into a full infestation in a matter of weeks. Here's how to spot them early, remove them humanely, and seal the gaps that let them in — so they stay out for good.",
+    date: "2026-07-20",
+    author: "Serene Touch Team",
+    category: "Pest Tips",
+    readTime: "6 min read",
+    cover: "images/photos/brick-house.webp",
+    content: `
+      <p>Mice are one of the most common cold-weather pests in Greater Toronto homes — and one of the most persistent. A single pair can turn into a full infestation in a matter of weeks, so the goal isn't just to catch the mice you can see; it's to remove them humanely and seal the gaps that let them in. Here's how to do both.</p>
+
+      <h2>Why mice are more than a nuisance</h2>
+      <p>Mice chew through wires, insulation, and wood, and they contaminate food and surfaces with their droppings. They also carry real health risks, including hantavirus and salmonella. Effective mouse control means pairing humane removal with thorough exclusion so they don't simply return.</p>
+
+      <h2>Signs you have mice</h2>
+      <ul>
+        <li><strong>Droppings</strong> — small, dark pellets about a quarter-inch long, usually near food or along baseboards.</li>
+        <li><strong>Gnaw marks</strong> — on food packaging, wires, or wood.</li>
+        <li><strong>Scratching noises</strong> — especially at night, inside walls or ceilings.</li>
+        <li><strong>Nests</strong> — shredded paper, fabric, or insulation tucked into hidden corners.</li>
+        <li><strong>Grease marks</strong> — dark smudges along the walls mice travel.</li>
+      </ul>
+
+      <h2>Humane removal methods</h2>
+      <h3>Live traps</h3>
+      <p>Set humane traps flush against walls — mice prefer to travel along edges — and bait them with peanut butter or seeds. Check the traps daily and release any mice at least a kilometre from your home.</p>
+      <h3>Eco-friendly deterrents</h3>
+      <ul>
+        <li><strong>Peppermint oil</strong> — soak cotton balls and place them near entry points, reapplying weekly.</li>
+        <li><strong>Ultrasonic devices</strong> — emit a high-frequency sound that can deter mice, though results vary.</li>
+      </ul>
+      <p>Avoid glue traps and poison — they're inhumane, and they can harm pets or children.</p>
+
+      <h2>Sealing entry points</h2>
+      <p>A mouse can squeeze through a gap the size of a dime, so exclusion is what makes removal last. Walk your home's exterior and seal:</p>
+      <ul>
+        <li><strong>Foundation cracks</strong> — pack them with steel wool and caulk.</li>
+        <li><strong>Gaps around pipes</strong> — fill them with expanding foam or metal mesh.</li>
+        <li><strong>Doors and windows</strong> — add weather stripping.</li>
+      </ul>
+
+      <h2>Preventing future infestations</h2>
+      <ul>
+        <li>Store food in airtight containers.</li>
+        <li>Keep garbage in sealed bins.</li>
+        <li>Trim vegetation back from your exterior walls.</li>
+        <li>Declutter to remove nesting sites.</li>
+      </ul>
+
+      <h2>When to call a professional</h2>
+      <p>If DIY methods aren't working or you suspect a large infestation, professional help ensures complete elimination. Our <a href="rodent-control.html">rodent control service</a> pairs humane removal with entry-point sealing so mice stay out for good — and our eco-friendly, low-toxic treatments are safe for families and pets, backed by a 100% satisfaction guarantee.</p>
+
+      <h2>Frequently asked questions</h2>
+      <h3>How fast do mice reproduce?</h3>
+      <p>A single pair can produce five to ten litters a year, with six to eight pups per litter — which is why early intervention is so important.</p>
+      <h3>Do mice leave on their own?</h3>
+      <p>No. Without removal and exclusion, they'll stay — and multiply.</p>
+      <h3>Are ultrasonic repellents effective?</h3>
+      <p>Results vary. Sealing entry points is far more reliable.</p>
+      <h3>Are mouse droppings dangerous?</h3>
+      <p>Yes. Wear gloves and a mask when cleaning them up, and disinfect the area afterward.</p>
+
+      <p>In the Greater Toronto Area and dealing with mice? <a href="index.html#contact">Book a free inspection</a> or call <a href="tel:+14389886709">438-988-6709</a> — we locate nests, remove mice humanely, and seal every entry point, guaranteed.</p>
+    `
+  },
+  {
     slug: "signs-of-cockroaches",
     title: "5 Signs You Might Have a Cockroach Problem (and What to Do)",
     excerpt: "Cockroaches are experts at staying hidden. Here are the five most common warning signs to look for in your home — and the steps to take before a few roaches become an infestation.",
