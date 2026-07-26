@@ -8,7 +8,7 @@
 =================================================================== */
 (function () {
   "use strict";
-  var GA4_ID = "G-XXXXXXXXXX"; // <-- paste your GA4 Measurement ID here
+  var GA4_ID = "G-94HWNEHWK4"; // Serene Touch GA4 property
 
   // Not configured yet (still the placeholder) -> do nothing.
   if (!GA4_ID || GA4_ID.indexOf("G-X") === 0) return;
