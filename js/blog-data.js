@@ -9,6 +9,70 @@
 =================================================================== */
 window.SERENE_BLOG = [
   {
+    slug: "eco-friendly-pest-control-toronto",
+    title: "Eco-Friendly Pest Control in Toronto: How Our Process Works",
+    excerpt: "A look at exactly how we treat a home — the free inspection, the custom plan, the treat-and-seal visit and the two-week follow-up — and why low-toxic methods handle Toronto's most common pests just as well as harsh chemistry.",
+    date: "2026-08-04",
+    author: "Serene Touch Team",
+    category: "Eco & Safety",
+    readTime: "5 min read",
+    cover: "images/photos/patio.webp",
+    content: `
+      <p>In Toronto, where so many homes back onto ravines, parks and mature gardens, pests are a recurring fact of life rather than a one-off event. Traditional pest control leans on harsh chemistry — and you're the one who has to live with it afterwards. We take the opposite approach: low-toxic, precisely targeted treatments that are safe for the people and animals in your home.</p>
+
+      <p>The methods work because they target pests where they actually live, so treatment is thorough without turning your home into a chemical zone. Whether it's <a href="ant-control.html">ants</a>, <a href="bed-bug-treatment.html">bed bugs</a>, <a href="cockroach-control.html">cockroaches</a> or <a href="rodent-control.html">mice and rats</a>, the approach stays gentle on your home and tough on the pest.</p>
+
+      <h2>Our approach, start to finish</h2>
+
+      <h3>1. Free inspection</h3>
+      <p>We start with a thorough look around your property to identify the pest and the true extent of the problem — which is often not where you first noticed it. You get a clear, no-obligation quote from that inspection.</p>
+
+      <h3>2. A plan built for your home</h3>
+      <p>Based on what we find, we build a treatment plan around your specific pest and your home's layout. A semi-detached with a shared wall needs a different plan than a detached house with a crawlspace, and the quote reflects that.</p>
+
+      <h3>3. Treat and seal</h3>
+      <p>We treat the infestation at its source and seal the entry points that let it in. The sealing is the part that makes it last — treatment alone removes the pests that are there now, not the route the next ones will use.</p>
+
+      <h3>4. Follow up</h3>
+      <p>About two weeks after the first visit we come back and confirm the problem is actually gone. That follow-up is included, and it's backed by our 100% satisfaction guarantee.</p>
+
+      <h2>Common pests in Toronto homes</h2>
+
+      <h3>Ants</h3>
+      <p>We trace the trail back to the nest, eliminate the colony at the source — carpenter ants included — and seal the entry points behind us. Killing the ants you can see achieves very little; the colony simply sends more.</p>
+
+      <h3>Bed bugs</h3>
+      <p>Our discreet, heat-assisted <a href="bed-bug-treatment.html">bed bug treatment</a> reaches every life stage, eggs included, with a follow-up visit to confirm zero survivors.</p>
+
+      <h3>Cockroaches</h3>
+      <p>We use a gel-bait treatment the colony carries back to the nest itself. It's far more effective than blanket spraying, which mostly scatters roaches into neighbouring rooms and walls.</p>
+
+      <h3>Mice and rats</h3>
+      <p>Humane removal paired with thorough entry-point sealing. A mouse only needs a gap the width of a pencil, so <a href="rodent-control.html">rodent work</a> is as much about sealing as it is about removal.</p>
+
+      <h2>How Serene Touch is different</h2>
+      <ul>
+        <li><strong>Eco-friendly</strong> — low-toxic products, safe for families and pets when properly applied.</li>
+        <li><strong>Discreet</strong> — unmarked vehicles and punctual arrivals. Your neighbours don't need to know.</li>
+        <li><strong>Guaranteed</strong> — if pests come back between visits, so do we, and the re-treatment is free.</li>
+      </ul>
+
+      <h2>Frequently asked questions</h2>
+
+      <h3>Is eco-friendly pest control actually effective?</h3>
+      <p>Yes. Precision is what does the work, not harshness — targeting the nest or colony directly tends to outperform heavy spraying, and it comes with prevention built in so the problem doesn't simply return.</p>
+
+      <h3>How quickly can you respond?</h3>
+      <p>We offer same-day appointments across Toronto and the GTA, Monday to Saturday.</p>
+
+      <h3>Are your treatments safe for pets?</h3>
+      <p>Yes. Our low-toxic products are safe for children and pets when applied correctly. We'll still ask you to keep everyone out of treated areas for a few hours and ventilate afterwards — simple precautions, not a major disruption.</p>
+
+      <h2>Get started</h2>
+      <p>Don't let a small problem turn into an infestation. See <a href="index.html#services">what we treat</a>, compare our <a href="plans.html">protection plans</a>, or call <a href="tel:+14389886709">438-988-6709</a> to book a free inspection.</p>
+    `
+  },
+  {
     slug: "how-to-get-rid-of-mice",
     title: "How to Get Rid of Mice: Effective & Humane Solutions",
     excerpt: "Mice can turn into a full infestation in a matter of weeks. Here's how to spot them early, remove them humanely, and seal the gaps that let them in — so they stay out for good.",
